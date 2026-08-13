@@ -43,6 +43,7 @@ def plot_robot_arm(ax, q1, q2, L1, L2, current_ee_x_history, current_ee_z_histor
     ax.set_ylabel('Z Position [m]')
     ax.grid(True)
 
+
 def generate_robot_arm_full_trajectory_gif(concatenated_q1_log, concatenated_q2_log, sim_params, robot_params, output_gif_filename='robot_arm_full_trajectory.gif', desired_total_gif_frames=200, full_desired_path_x=None, full_desired_path_z=None, target_trajectory_x=None, target_trajectory_z=None):
     """
     Generates a GIF visualizing the robot arm's full trajectory.
