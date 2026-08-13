@@ -1,0 +1,4 @@
+mujoco==3.1.6
+PyOpenGL==3.1.7
+imageio==2.31.1
+matplotlib

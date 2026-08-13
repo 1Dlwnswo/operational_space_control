@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Optional
 import numpy as np
 
 @dataclass
@@ -36,7 +37,7 @@ class SimulationResult:
     tau: np.ndarray
     a_cmd: np.ndarray
 
-    save_os: bool = False
-    x: np.ndarray | None = None
-    xdot: np.ndarray | None = None
-    xddot: np.ndarray | None = None
+    save_os: Optional[np.ndarray] = None
+    x: Optional[np.ndarray] = None
+    xdot: Optional[np.ndarray] = None
+    xddot: Optional[np.ndarray] = None
