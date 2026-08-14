@@ -1,4 +1,4 @@
-from src.dataclasses import ImpedanceControlParameters
+from src.parameters import ImpedanceControlParameters
 import numpy as np
 
 def path_following(x, xdot, path_obj, impedance_control_params: ImpedanceControlParameters, max_acceleration, step_index: int = 0):

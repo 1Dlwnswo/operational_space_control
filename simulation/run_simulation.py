@@ -1,5 +1,5 @@
 import numpy as np
-from src.dataclasses import RobotParameters, ImpedanceControlParameters,SimulationParameters
+from src.parameters import RobotParameters, ImpedanceControlParameters,SimulationParameters
 from src.mujoco_setup import get_end_effector_position
 from simulation.perform_simulation_step import perform_simulation_step
 

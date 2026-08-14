@@ -3,6 +3,7 @@ import imageio
 import matplotlib.pyplot as plt
 import os
 from src.mujoco_setup import get_end_effector_position
+import tempfile
 
 def plot_robot_arm(ax, q1, q2, L1, L2, current_ee_x_history, current_ee_z_history, desired_full_path_x=None, desired_full_path_z=None):
     # Joint 1 position (base)
@@ -62,8 +63,9 @@ def generate_robot_arm_full_trajectory_gif(concatenated_q1_log, concatenated_q2_
     """
     total_sim_steps_for_gif = len(concatenated_q1_log)
     print(f"Total simulation steps for GIF: {total_sim_steps_for_gif}")
-
+    
     frame_filenames = []
+    frame_dir = tempfile.TemporaryDirectory()
     fig, ax = plt.subplots(figsize=(8, 8))
 
     frame_interval = max(1, total_sim_steps_for_gif // desired_total_gif_frames)
@@ -107,20 +109,17 @@ def generate_robot_arm_full_trajectory_gif(concatenated_q1_log, concatenated_q2_
             ax.set_title(f'Robot Arm Point-to-Point (Target: ({target_trajectory_x[i]:.2f}, {target_trajectory_z[i]:.2f}))')
         else:
             ax.set_title(f'Robot Arm Simulation (Time: {i * sim_params.dt:.2f}s)')
-
-
-        frame_filename = f'frame_{i:04d}.png'
+        
+        frame_filename = os.path.join(frame_dir.name, f'frame_{i:04d}.png')
         plt.savefig(frame_filename)
         frame_filenames.append(frame_filename)
 
-    with imageio.get_writer(output_gif_filename, mode='I', fps=fps) as writer:
+    with imageio.get_writer(output_gif_filename, mode='I', duration = 1000 / fps) as writer:
         for filename in frame_filenames:
             image = imageio.imread(filename)
             writer.append_data(image)
 
-    for filename in frame_filenames:
-        os.remove(filename)
-
     plt.close(fig)
+    frame_dir.cleanup()
 
     print(f"'{output_gif_filename}' file has been saved locally.")

@@ -1,7 +1,7 @@
 # @title
 import matplotlib.pyplot as plt
 import numpy as np
-from src.dataclasses import RobotParameters, SimulationParameters
+from src.parameters import RobotParameters, SimulationParameters
 from src.mujoco_setup import dt, get_end_effector_position
 
 def plot_combined_results(osc_all_q_logs, osc_all_torque_logs, osc_all_a_cmd_logs, osc_all_xdot_logs, osc_all_xddot_logs, osc_all_dist_logs, osc_ee_convergence_times, osc_all_manipulability_logs, osc_all_x_logs, target_positions, sim_params: SimulationParameters, robot_params: RobotParameters, q_init):
@@ -181,4 +181,8 @@ def plot_combined_results(osc_all_q_logs, osc_all_torque_logs, osc_all_a_cmd_log
         ax_ee_traj.plot(target_x, target_z, 'rx', markersize=10, mew=2) # Mark target points
 
     plt.tight_layout(rect=[0, 0, 1, 0.98]) # Adjust layout to prevent overlapping titles/labels
-    plt.show()
+    plt.savefig('experiment/results/combined_simulation_results.png', dpi=300, bbox_inches='tight') # Save the figure as a high-resolution PNG
+    
+    plt.show(block=False)
+    plt.pause(5)
+    plt.close()

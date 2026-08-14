@@ -1,10 +1,11 @@
 import numpy as np
-from src.dataclasses import RobotParameters, SimulationParameters
+from src.parameters import RobotParameters, SimulationParameters
 from src.mujoco_setup import model, data, dt, L1, L2, m1, m2, c1, c2, g, I1, I2, get_end_effector_position, get_jacobian, get_ee_convergence_time
 from src.path.LinePath import LinePath
 from simulation.run_simulation import run_simulation
 from experiment.LinePath.generate_grid import uniform_grid
 from experiment.LinePath.plot_combined_results import plot_combined_results
+from experiment.gif_generation import generate_robot_arm_full_trajectory_gif
 
 # ============================================
 # Instantiate Dataclasses
@@ -97,3 +98,33 @@ print("Operational Space Control simulation complete.")
 
 plot_combined_results(osc_all_q_logs, osc_all_torque_logs, osc_all_a_cmd_logs, osc_all_xdot_logs, osc_all_xddot_logs, 
                       osc_all_dist_logs, osc_ee_convergence_times, osc_all_manipulability_logs, osc_all_x_logs, target_positions, sim_params, robot_params, q_init)
+
+# --- CONCATENATE ALL SIMULATION LOGS FOR GIF GENERATION ---
+# These variables are available from previous cells after running the full simulation (e.g., h2iii1opeztg)
+# osc_all_q1_logs, osc_all_q2_logs, target_positions, sim_params (from h2iii1opeztg)
+
+concatenated_q1_log = []
+concatenated_q2_log = []
+concatenated_target_x_log = []
+concatenated_target_z_log = []
+
+for idx, (target_x, target_z) in enumerate(target_positions):
+    # Extend with the actual logged joint positions for this target
+    concatenated_q1_log.extend(osc_all_q_logs[idx][:,0])
+    concatenated_q2_log.extend(osc_all_q_logs[idx][:,1])
+    # Repeat the current target for the duration of this simulation segment
+    concatenated_target_x_log.extend([target_x] * sim_params.num_steps)
+    concatenated_target_z_log.extend([target_z] * sim_params.num_steps)
+
+
+# Call the new function to generate the GIF
+generate_robot_arm_full_trajectory_gif(
+    concatenated_q1_log,
+    concatenated_q2_log,
+    sim_params,
+    robot_params,
+    output_gif_filename='experiment/results/robot_arm_full_trajectory.gif',
+    desired_total_gif_frames=200,
+    target_trajectory_x=concatenated_target_x_log,
+    target_trajectory_z=concatenated_target_z_log
+)
