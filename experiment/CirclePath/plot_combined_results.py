@@ -204,7 +204,7 @@ def plot_circular_path_results(x_log, q_log, torque_log, circular_path_obj: Circ
 
     axes_circular[2,2].set_title('End-effector X, Z Velocities and Total Speed Over Time')
     axes_circular[2,2].set_xlabel('Time [s]')
-    axes_circular[2,2].set_ylabel('Velocity [m/s] / Speed [m/s]')
+    axes_circular[2,2].set_ylabel('Speed [m/s]')
     axes_circular[2,2].grid(True)
     axes_circular[2,2].legend()
     
