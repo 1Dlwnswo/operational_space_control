@@ -72,6 +72,7 @@ def generate_robot_arm_full_trajectory_gif(concatenated_q1_log, concatenated_q2_
 
     simulation_real_duration = total_sim_steps_for_gif * sim_params.dt
     actual_num_gif_frames = len(concatenated_q1_log[::frame_interval])
+    
     if simulation_real_duration > 0 and actual_num_gif_frames > 0:
         fps = actual_num_gif_frames / simulation_real_duration
     else:
