@@ -43,9 +43,9 @@ torque_log = np.array([sim_result.tau for sim_result in circular_simulation_log]
 # ============================================
 # Plot combined results for all target positions
 # ============================================
-plot_circular_path_results(x_log, q_log, torque_log, circular_path_center, circular_path_radius, circular_path_sim_params, robot_params)
+plot_circular_path_results(x_log, q_log, torque_log, circular_path_obj, circular_path_sim_params, robot_params)
 
-
+'''
 # ============================================
 # Call the GIF generation function for the circular path
 # ============================================
@@ -57,6 +57,7 @@ theta = np.linspace(0, 2 * np.pi, 500) # More points for a smooth circle
 full_circular_path_x = circular_path_obj.center[0] + circular_path_obj.radius * np.cos(theta)
 full_circular_path_z = circular_path_obj.center[1] + circular_path_obj.radius * np.sin(theta)
 
+
 generate_robot_arm_full_trajectory_gif(
     q1_log_circular,
     q2_log_circular,
@@ -66,4 +67,4 @@ generate_robot_arm_full_trajectory_gif(
     desired_total_gif_frames=200,
     full_desired_path_x=full_circular_path_x,
     full_desired_path_z=full_circular_path_z
-)
+)'''
