@@ -18,6 +18,7 @@ sim_params = SimulationParameters(dt=dt, num_steps=int(4000/cruise_speed + 2000*
 
 q_init = np.array([np.pi*5/12, np.pi * (1 - 10/12)]) # Initial joint angles [q1, q2]
 
+
 # ============================================
 # Set target positions
 # ============================================
@@ -29,8 +30,9 @@ final_ee_pos = np.array([-1.5, -1])
 target_positions = linear_grid(initial_ee_pos=initial_ee_pos, final_ee_pos=final_ee_pos, n = 4)
 '''
 
+
 # ============================================
-# Simulation for Operational Space Control
+# Initialize logs for all simulations
 # ============================================
 osc_all_q_logs = []
 osc_all_qdot_logs = []
@@ -48,6 +50,10 @@ osc_ee_convergence_times = []
 
 print(f"Number of OSC simulations: {len(target_positions)}")
 
+
+# ============================================
+# Run simulation for each target position
+# ============================================
 for idx, (target_x, target_z) in enumerate(target_positions):
 
     ee_start_pos = get_end_effector_position(q_init[0], q_init[1], robot_params.L1, robot_params.L2)
@@ -67,8 +73,6 @@ for idx, (target_x, target_z) in enumerate(target_positions):
     xddot_log_current = np.array([sim_result.xddot for sim_result in current_simulation_log])
 
     osc_all_q_logs.append(q_log_current)
-    osc_all_qdot_logs.append(qdot_log_current)
-    osc_all_qddot_logs.append(qddot_log_current)
     osc_all_torque_logs.append(torque_log_current)
     osc_all_a_cmd_logs.append(a_cmd_log_current)
 
@@ -94,15 +98,19 @@ for idx, (target_x, target_z) in enumerate(target_positions):
     conv_time_ee = get_ee_convergence_time(np.array(x_log_current), np.array(target_positions[idx]), sim_params.dt)
     osc_ee_convergence_times.append(conv_time_ee)
 
-print("Operational Space Control simulation complete.")
+print("Operational Space Control simulation complete.\n")
 
+
+# ============================================
+# Plot combined results for all target positions
+# ============================================
 plot_combined_results(osc_all_q_logs, osc_all_torque_logs, osc_all_a_cmd_logs, osc_all_xdot_logs, osc_all_xddot_logs, 
                       osc_all_dist_logs, osc_ee_convergence_times, osc_all_manipulability_logs, osc_all_x_logs, target_positions, sim_params, robot_params, q_init)
 
-# --- CONCATENATE ALL SIMULATION LOGS FOR GIF GENERATION ---
-# These variables are available from previous cells after running the full simulation (e.g., h2iii1opeztg)
-# osc_all_q1_logs, osc_all_q2_logs, target_positions, sim_params (from h2iii1opeztg)
 
+# ============================================
+# Generate GIF for the full trajectory across all target positions
+# ============================================
 concatenated_q1_log = []
 concatenated_q2_log = []
 concatenated_target_x_log = []

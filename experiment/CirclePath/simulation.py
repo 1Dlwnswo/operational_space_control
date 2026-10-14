@@ -1,11 +1,15 @@
 # @title
 import numpy as np
 from src.parameters import RobotParameters, SimulationParameters
-from src.mujoco_setup import model, data, dt, L1, L2, m1, m2, c1, c2, g, I1, I2, get_end_effector_position, get_jacobian, get_ee_convergence_time
+from src.mujoco_setup import model, data, dt, L1, L2, m1, m2, c1, c2, g, I1, I2
 from src.path.CirclePath import CirclePath
 from simulation.run_simulation import run_simulation
 from experiment.gif_generation import generate_robot_arm_full_trajectory_gif
+from experiment.CirclePath.plot_combined_results import plot_circular_path_results
 
+# ============================================
+# Define Circular Path Parameters
+# ============================================
 circular_path_center = np.array([0.3, 0.0]) # Center of Circle (x, z)
 circular_path_radius = 0.7 # Radius of Circle
 
@@ -23,32 +27,36 @@ q_init = np.array([np.pi*5/12, np.pi * (1 - 10/12)]) # Initial joint angles [q1,
 
 max_acceleration = 15
 
-# Run the simulation for circular path tracking
+
+# ============================================
+# Run Simulation for Circular Path Tracking
+# ============================================
 circular_simulation_log = run_simulation(model, data, q_init, "pw", robot_params, circular_path_sim_params, circular_path_obj, max_acceleration=max_acceleration, save_operational_space=True)
+print("Circular Path Tracking simulation complete.\n")
 
 # Extract logs for joint angles, torques, and end-effector positions
-q_log_circular_all = np.array([sim_result.q for sim_result in circular_simulation_log])
-q1_log_circular = q_log_circular_all[:, 0]
-q2_log_circular = q_log_circular_all[:, 1]
+x_log = np.array([sim_result.x for sim_result in circular_simulation_log])
+q_log = np.array([sim_result.q for sim_result in circular_simulation_log])
+torque_log = np.array([sim_result.tau for sim_result in circular_simulation_log])
 
-torque_log_circular_all = np.array([sim_result.tau for sim_result in circular_simulation_log])
-torque1_log_circular = torque_log_circular_all[:, 0]
-torque2_log_circular = torque_log_circular_all[:, 1]
 
-ee_pos_log_circular_all = np.array([sim_result.x for sim_result in circular_simulation_log])
-ee_x_log_circular = ee_pos_log_circular_all[:, 0]
-ee_z_log_circular = ee_pos_log_circular_all[:, 1]
+# ============================================
+# Plot combined results for all target positions
+# ============================================
+plot_circular_path_results(x_log, q_log, torque_log, circular_path_center, circular_path_radius, circular_path_sim_params, robot_params)
 
-print("Circular Path Tracking simulation complete.")
 
-desired_speed_circular = circular_path_obj.cruise_angular_speed * circular_path_obj.radius
+# ============================================
+# Call the GIF generation function for the circular path
+# ============================================
+q1_log_circular = q_log[:, 0]
+q2_log_circular = q_log[:, 1]
 
 # Generate the full desired circular path for plotting
 theta = np.linspace(0, 2 * np.pi, 500) # More points for a smooth circle
 full_circular_path_x = circular_path_obj.center[0] + circular_path_obj.radius * np.cos(theta)
 full_circular_path_z = circular_path_obj.center[1] + circular_path_obj.radius * np.sin(theta)
 
-# Call the GIF generation function for the circular path
 generate_robot_arm_full_trajectory_gif(
     q1_log_circular,
     q2_log_circular,

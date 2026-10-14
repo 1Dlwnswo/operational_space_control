@@ -1,13 +1,20 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from src.mujoco_setup import dt
+from src.parameters import RobotParameters, SimulationParameters
 
-def plot_circular_path_results(ee_x_log_circular, ee_z_log_circular, q1_log_circular, q2_log_circular, \
-                                torque1_log_circular, torque2_log_circular, circular_path_sim_params, robot_params, circular_path_center, circular_path_radius):
-    axes_circular = plt.subplots(2, 2, figsize=(10, 10))
-
+def plot_circular_path_results(x_log, q_log, torque_log, circular_path_center, circular_path_radius ,sim_params: SimulationParameters, robot_params: RobotParameters):
+    _, axes_circular = plt.subplots(2, 2, figsize=(10, 10))
+    
+    ee_x_log_circular = x_log[:, 0]
+    ee_z_log_circular = x_log[:, 1]
+    q1_log_circular = q_log[:, 0]
+    q2_log_circular = q_log[:, 1]
+    torque1_log_circular = torque_log[:, 0]
+    torque2_log_circular = torque_log[:, 1]
+    
     # Create time_log for circular trajectory based on its simulation parameters
-    time_log_circular = [i * dt for i in range(circular_path_sim_params.num_steps)]
+    time_log_circular = [i * dt for i in range(sim_params.num_steps)]
 
     # --- End-effector X, Z Position over Time ---
     axes_circular[0,0].plot(time_log_circular, ee_x_log_circular, label='End-effector X')
@@ -58,5 +65,9 @@ def plot_circular_path_results(ee_x_log_circular, ee_z_log_circular, q1_log_circ
     axes_circular[1,1].legend()
 
     plt.tight_layout()
-    plt.suptitle('Circular Path Tracking Simulation Results', y=1.02, fontsize=16)
-    plt.show()
+    plt.suptitle('Circular Path Tracking Simulation Results', y=1.02, fontsize=16)    
+    plt.savefig('experiment/results/circular_path_simulation_results.png', dpi=300, bbox_inches='tight') # Save the figure as a high-resolution PNG
+    
+    plt.show(block=False)
+    plt.pause(5)
+    plt.close()
