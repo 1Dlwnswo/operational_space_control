@@ -7,6 +7,7 @@ from experiment.LinePath.generate_grid import uniform_grid
 from experiment.LinePath.plot_combined_results import plot_combined_results
 from experiment.gif_generation import generate_robot_arm_full_trajectory_gif
 from typing import Optional
+from experiment.experiment_runner import run_experiment_cli
 
 # ============================================
 # Run simulation for multiple target positions
@@ -99,7 +100,7 @@ def process_simulation_logs(simulation_logs: list, sim_params: SimulationParamet
 # ============================================
 # Plot combined results for all target positions
 # ============================================
-def plot_results_for_all_targets(simulation_logs: list, sim_params: SimulationParameters, q_init: np.ndarray, target_positions: np.ndarray, robot_params: RobotParameters):
+def plot_results(simulation_logs: list, sim_params: SimulationParameters, q_init: np.ndarray, target_positions: np.ndarray, robot_params: RobotParameters):
     
     processed_results = process_simulation_logs(simulation_logs, sim_params, target_positions, robot_params)
     plot_combined_results(processed_results, target_positions, sim_params, robot_params, q_init)
@@ -108,7 +109,7 @@ def plot_results_for_all_targets(simulation_logs: list, sim_params: SimulationPa
 # ============================================
 # Generate GIF for the full trajectory across all target positions
 # ============================================
-def generate_gif_for_full_trajectory(simulation_logs: list, sim_params: SimulationParameters, robot_params: RobotParameters, target_positions: np.ndarray):
+def generate_gif(simulation_logs: list, sim_params: SimulationParameters, robot_params: RobotParameters, target_positions: np.ndarray):
     
     concatenated_q1_log = []
     concatenated_q2_log = []
@@ -152,51 +153,13 @@ def main(generate_plot=True, generate_gif=True):
     # Plot results for all target positions
     if generate_plot:
         print("Generating plots...")
-        plot_results_for_all_targets(simulation_logs, sim_params, q_init, target_positions, RobotParameters(L1=L1, L2=L2, m1=m1, m2=m2, c1=c1, c2=c2, g=g, I1=I1, I2=I2))
+        plot_results(simulation_logs, sim_params, q_init, target_positions, RobotParameters(L1=L1, L2=L2, m1=m1, m2=m2, c1=c1, c2=c2, g=g, I1=I1, I2=I2))
 
     # Generate GIF for the full trajectory across all target positions
     if generate_gif:
         print("Generating GIF...")
-        generate_gif_for_full_trajectory(simulation_logs, sim_params, RobotParameters(L1=L1, L2=L2, m1=m1, m2=m2, c1=c1, c2=c2, g=g, I1=I1, I2=I2), target_positions)
+        generate_gif(simulation_logs, sim_params, RobotParameters(L1=L1, L2=L2, m1=m1, m2=m2, c1=c1, c2=c2, g=g, I1=I1, I2=I2), target_positions)
     
 
 if __name__ == "__main__":
-    import argparse
-
-    parser = argparse.ArgumentParser()
-
-    parser.add_argument(
-        "--plot",
-        dest="generate_plot",
-        action="store_true",
-    )
-    parser.add_argument(
-        "--no-plot",
-        dest="generate_plot",
-        action="store_false",
-    )
-    parser.add_argument(
-        "--gif",
-        dest="generate_gif",
-        action="store_true",
-    )
-    parser.add_argument(
-        "--no-gif",
-        dest="generate_gif",
-        action="store_false",
-    )
-
-    parser.set_defaults(
-        generate_plot=True,
-        generate_gif=True,
-    )
-
-    args = parser.parse_args()
-
-    print(f"Generate plot: {args.generate_plot}")
-    print(f"Generate GIF: {args.generate_gif}")
-
-    main(
-        generate_plot=args.generate_plot,
-        generate_gif=args.generate_gif,
-    )
+    run_experiment_cli(main)
