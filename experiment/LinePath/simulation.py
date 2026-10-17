@@ -109,7 +109,7 @@ def plot_results(simulation_logs: list, sim_params: SimulationParameters, q_init
 # ============================================
 # Generate GIF for the full trajectory across all target positions
 # ============================================
-def generate_gif(simulation_logs: list, sim_params: SimulationParameters, robot_params: RobotParameters, target_positions: np.ndarray):
+def generate_GIF(simulation_logs: list, sim_params: SimulationParameters, robot_params: RobotParameters, target_positions: np.ndarray):
     
     concatenated_q1_log = []
     concatenated_q2_log = []
@@ -158,7 +158,7 @@ def main(generate_plot=True, generate_gif=True):
     # Generate GIF for the full trajectory across all target positions
     if generate_gif:
         print("Generating GIF...")
-        generate_gif(simulation_logs, sim_params, RobotParameters(L1=L1, L2=L2, m1=m1, m2=m2, c1=c1, c2=c2, g=g, I1=I1, I2=I2), target_positions)
+        generate_GIF(simulation_logs, sim_params, RobotParameters(L1=L1, L2=L2, m1=m1, m2=m2, c1=c1, c2=c2, g=g, I1=I1, I2=I2), target_positions)
     
 
 if __name__ == "__main__":

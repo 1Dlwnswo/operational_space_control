@@ -45,7 +45,7 @@ def plot_results(simulation_log: list, sim_params: SimulationParameters, circula
 # ============================================
 # Generate GIF for Circular Path Tracking
 # ============================================
-def generate_gif(simulation_log: list, sim_params: SimulationParameters, circular_path_obj: CirclePath, robot_params: RobotParameters):
+def generate_GIF(simulation_log: list, sim_params: SimulationParameters, circular_path_obj: CirclePath, robot_params: RobotParameters):
     # Extract logs for joint angles
     q_log = np.array([sim_result.q for sim_result in simulation_log])
 
@@ -97,7 +97,7 @@ def main(generate_plot=True, generate_gif=True):
     # Generate GIF for circular path tracking
     if generate_gif:
         print("Generating GIF...")
-        generate_gif(simulation_log, sim_params, circular_path_obj, RobotParameters_obj)
+        generate_GIF(simulation_log, sim_params, circular_path_obj, RobotParameters_obj)
 
 if __name__ == "__main__":
     run_experiment_cli(main)
