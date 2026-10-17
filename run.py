@@ -7,8 +7,11 @@ PROJECT_ROOT = Path(__file__).resolve().parent
 SIMULATIONS = {
     "1": ("Circle Path", "experiment.CirclePath.simulation"),
     "2": ("Line Path", "experiment.LinePath.simulation"),
+    "3": ("Polygon Path", "experiment.PolygonPath.simulation"),
 }
 
+GENERATE_PLOT = True
+GENERATE_GIF = False
 
 def main():
     while True:
@@ -34,7 +37,9 @@ def main():
         print(f"\nRunning {name}...\n")
 
         result = subprocess.run(
-            [sys.executable, "-m", module],
+            [sys.executable, "-m", module,
+            "--plot" if GENERATE_PLOT else "--no-plot",
+            "--gif" if GENERATE_GIF else "--no-gif"],
             cwd=PROJECT_ROOT,
         )
 

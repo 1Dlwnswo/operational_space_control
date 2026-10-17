@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 import numpy as np
-import LinePath
+from src.path.LinePath import LinePath
 
 @dataclass
 class PolygonPath:
