@@ -1,0 +1,25 @@
+[project]
+name = "operational-space-control"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "1Dlwnswo", email = "junjaeasd@gmail.com" }
+]
+requires-python = ">=3.8.10"
+dependencies = [
+    "glfw==2.10.2",
+    "imageio==2.31.1",
+    "matplotlib==3.7.5",
+    "mujoco==3.1.6",
+    "numpy==1.24.4",
+    "pyopengl==3.1.7",
+    "scipy==1.10.0",
+]
+
+[project.scripts]
+operational-space-control = "operational_space_control:main"
+
+[build-system]
+requires = ["uv_build>=0.13.1,<0.14.0"]
+build-backend = "uv_build"
