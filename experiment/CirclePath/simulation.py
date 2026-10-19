@@ -13,15 +13,13 @@ from experiment.experiment_runner import run_experiment_cli
 # ============================================
 # Run Simulation for Circular Path Tracking
 # ============================================
-def run_experiment(q_init: np.ndarray, circular_path_obj: CirclePath, robot_params: Optional[RobotParameters] = None, 
+def run_experiment(q_init: np.ndarray, circular_path_obj: CirclePath, 
                    max_acceleration = 10.0, verbose = True, use_viewer = False):
     # Load the Mujoco model and data
-    model, data = load_model_and_data("model/2dof_arm.xml")
+    model, data = load_model_and_data(MODEL_PATH)
     
-    if robot_params is None:
-        robot_params = get_robot_parameters(load_model_and_data("model/2dof_arm.xml")[0])
-
     sim_params = get_simulation_parameters(model)
+    sim_params.num_steps = int(20/sim_params.dt)
 
     simulation_log = run_simulation(model, data, q_init, "pw", sim_params, circular_path_obj, 
                                     max_acceleration = max_acceleration, save_operational_space = True, use_viewer = use_viewer)
@@ -87,14 +85,13 @@ def main(use_viewer = True, generate_plot = True, generate_gif = True):
     # Set a maximum acceleration
     max_acceleration = 15.0
     
-    
     if use_viewer:
         print("Running simulation with viewer...")
     else:
         print("Running simulation without viewer...")
     
     # Run the simulation for circular path tracking
-    simulation_log, sim_params = run_experiment(q_init, circular_path_obj, max_acceleration = max_acceleration, verbose = True, use_viewer = use_viewer)
+    simulation_log, sim_params = run_experiment(q_init, circular_path_obj, max_acceleration = max_acceleration, use_viewer = use_viewer)
     
     # Create RobotParameters object for plotting and GIF generation
     RobotParameters_obj = get_robot_parameters(load_model_and_data(MODEL_PATH)[0])

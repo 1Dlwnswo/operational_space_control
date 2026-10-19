@@ -2,7 +2,7 @@ import numpy as np
 import mujoco
 import mujoco.viewer
 import time
-from src.parameters import RobotParameters, ImpedanceControlParameters,SimulationParameters
+from src.parameters import ImpedanceControlParameters,SimulationParameters
 from simulation.perform_simulation_step import perform_simulation_step
 
 # ============================================
@@ -30,7 +30,7 @@ def run_simulation(model, data, q_init: np.ndarray, \
     simulation_log = []
     
     def simulation_loop(viewer=None):
-        timestep = model.opt.timestep
+        timestep = sim_params.dt
         
         for i in range(sim_params.num_steps):
             
