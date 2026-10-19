@@ -18,7 +18,15 @@
   </worldbody>
 
   <actuator>
-    <motor joint="j1"/>
-    <motor joint="j2"/>
+    <motor name="m1" joint="j1" ctrlrange="-100 100"/>
+    <motor name="m2" joint="j2" ctrlrange="-100 100"/>
   </actuator>
+
+  <sensor>
+    <jointpos name="joint1_pos" joint="j1"/>
+    <jointpos name="joint2_pos" joint="j2"/>
+    <jointvel name="joint1_vel" joint="j1"/>
+    <jointvel name="joint2_vel" joint="j2"/>
+  </sensor>
+
 </mujoco>

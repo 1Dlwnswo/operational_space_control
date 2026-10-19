@@ -32,12 +32,12 @@ class ImpedanceControlParameters:
 class SimulationResult:
     q: np.ndarray
     qdot: np.ndarray
-    qddot: np.ndarray
 
     tau: np.ndarray
     a_cmd: np.ndarray
 
     save_os: Optional[np.ndarray] = None
+    qddot: Optional[np.ndarray] = None
     x: Optional[np.ndarray] = None
     xdot: Optional[np.ndarray] = None
     xddot: Optional[np.ndarray] = None

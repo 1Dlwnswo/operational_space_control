@@ -2,8 +2,10 @@ import numpy as np
 import mujoco
 import mujoco.viewer
 import time
-from src.parameters import ImpedanceControlParameters,SimulationParameters
+from src.parameters import RobotParameters, ImpedanceControlParameters,SimulationParameters
 from simulation.perform_simulation_step import perform_simulation_step
+from src.mujoco_setup import get_robot_parameters
+
 
 # ============================================
 # Define the simulation function
@@ -25,6 +27,8 @@ def run_simulation(model, data, q_init: np.ndarray, \
     Kp_osc_sim = (0.25 * max_acceleration**2) * np.eye(2)
     Kd_osc_sim = max_acceleration * np.eye(2)
     max_torque_osc = 1000 # Maximum torque for OSC
+    
+    robot_params = get_robot_parameters(model)
     impedance_control_params = ImpedanceControlParameters(Kp=Kp_osc_sim, Kd=Kd_osc_sim, max_torque=max_torque_osc)
 
     simulation_log = []
@@ -36,7 +40,7 @@ def run_simulation(model, data, q_init: np.ndarray, \
             
             start_time = time.perf_counter() if viewer is not None else None
             
-            sim_results = perform_simulation_step(model, data, impedance_control_params, \
+            sim_results = perform_simulation_step(model, data, robot_params, impedance_control_params, \
                                                   control_type, path_obj, max_acceleration, step_index=i, save_operational_space = save_operational_space, viewer=viewer)
             simulation_log.append(sim_results)
             
