@@ -2,7 +2,7 @@ import numpy as np
 import imageio
 import matplotlib.pyplot as plt
 import os
-from src.mujoco_setup import get_end_effector_position
+from src.robot.arm_2dof.kinematics import get_end_effector_position
 import tempfile
 
 def plot_robot_arm(ax, q1, q2, L1, L2, current_ee_x_history, current_ee_z_history, desired_full_path_x=None, desired_full_path_z=None):

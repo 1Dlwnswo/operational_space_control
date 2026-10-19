@@ -2,7 +2,8 @@
 import numpy as np
 import mujoco
 from src.parameters import RobotParameters, ImpedanceControlParameters, SimulationResult
-from src.mujoco_setup import get_jacobian, get_J_dot, get_end_effector_position, calcuate_inertia_matrix, calculate_coriolis_centrifugal_torques, calculate_gravity_torques
+from src.robot.arm_2dof.kinematics import get_jacobian, get_J_dot, get_end_effector_position
+from src.robot.arm_2dof.dynamics import calcuate_inertia_matrix, calculate_coriolis_centrifugal_torques, calculate_gravity_torques
 from simulation.acceleration_command import path_following, impedance_control
 
 
