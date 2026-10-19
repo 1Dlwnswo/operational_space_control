@@ -2,7 +2,7 @@ import numpy as np
 import mujoco
 import mujoco.viewer
 import time
-from src.parameters import RobotParameters, ImpedanceControlParameters,SimulationParameters
+from src.parameters import ImpedanceControlParameters,SimulationParameters
 from simulation.perform_simulation_step import perform_simulation_step
 from src.mujoco_setup import get_robot_parameters
 

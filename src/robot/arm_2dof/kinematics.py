@@ -20,7 +20,7 @@ def get_J_dot(q1, q2, q1_dot, q2_dot, L1, L2):
     ])
     return Jdot
 
-def inverse_kinematics(pos, L1, L2, q_current = None):
+def inverse_kinematics(pos: np.ndarray, L1: float, L2: float, q_current: np.ndarray):
     x = pos[0]
     z = pos[1]
 

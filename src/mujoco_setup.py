@@ -1,5 +1,4 @@
 import mujoco
-import numpy as np
 
 MODEL_PATH = "model/arm_2dof.xml"
 

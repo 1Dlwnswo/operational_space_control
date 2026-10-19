@@ -1,10 +1,13 @@
 import numpy as np
+from typing import Optional
+
 from src.parameters import RobotParameters, SimulationParameters
-from src.mujoco_setup import MODEL_PATH, load_model_and_data, get_robot_parameters
+from src.mujoco_setup import MODEL_PATH, load_model_and_data, get_robot_parameters, get_simulation_parameters
 from src.path.PolygonPath import PolygonPath
+from src.robot.arm_2dof.kinematics import inverse_kinematics
+
 from simulation.run_simulation import run_simulation
 from experiment.gif_generation import generate_robot_arm_full_trajectory_gif
-from typing import Optional
 from experiment.experiment_runner import run_experiment_cli
 from experiment.PolygonPath.plot_combined_results import plot_polygonal_path_results
 
@@ -30,17 +33,17 @@ def regular_polygon(r, n):
 def run_experiment(q_init: np.ndarray, polygon_path_obj: PolygonPath, robot_params: Optional[RobotParameters] = None, 
                    max_acceleration = 10.0, verbose = True, use_viewer = False):
     # Load the Mujoco model and data
-    model, data = load_model_and_data("model/2dof_arm.xml")
+    model, data = load_model_and_data(MODEL_PATH)
     
     if robot_params is None:
-        robot_params = get_robot_parameters(load_model_and_data("model/2dof_arm.xml")[0])
+        robot_params = get_robot_parameters(model)
 
     # Set SimulationParameters for the polygonal path
     polygon_sim_duration = 20.0 # seconds
-    polygon_num_steps = int(polygon_sim_duration / dt)
-    sim_params = SimulationParameters(dt=dt, num_steps=polygon_num_steps)
+    sim_params = get_simulation_parameters(model)
+    sim_params.num_steps = int(polygon_sim_duration / sim_params.dt)
     
-    simulation_log = run_simulation(model, data, q_init, "pw", robot_params, sim_params, polygon_path_obj, 
+    simulation_log = run_simulation(model, data, q_init, "pw", sim_params, polygon_path_obj, 
                                     max_acceleration=max_acceleration, save_operational_space=True, use_viewer = use_viewer)
     
     if verbose:
@@ -80,7 +83,7 @@ def generate_GIF(simulation_log: list, sim_params: SimulationParameters, polygon
         segment_length = segment.length
         # Generate points along the segment for visualization
         if segment_length > 0:
-            num_points_per_segment = int(segment_length / (polygon_path_obj.desired_speed * dt)) + 2 # Add a few extra points
+            num_points_per_segment = int(segment_length / (polygon_path_obj.desired_speed * sim_params.dt)) + 2 # Add a few extra points
             # Use np.linspace to get points along the segment
             for k in range(num_points_per_segment):
                 alpha = k / (num_points_per_segment - 1)
@@ -108,12 +111,12 @@ def generate_GIF(simulation_log: list, sim_params: SimulationParameters, polygon
 # Main function to run the polygonal path following experiment
 # ============================================
 def main(use_viewer = True, generate_plot = True, generate_gif = True):
-    
-    # Initial joint angles
-    q_init = inverse_kinematics(np.array([0, 1.5]), L1, L2)
-    
+   
      # Define the vertices of a polygonal path
     polygon_vertices = regular_polygon(1.5, 5)
+    
+    # Initial joint angles
+    q_init = inverse_kinematics(polygon_vertices[0], 1.0, 1.0, polygon_vertices[0])
 
     # Define desired speed and maximum acceleration for the polygonal path
     desired_speed = 3.0
