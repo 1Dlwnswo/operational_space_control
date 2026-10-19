@@ -27,7 +27,8 @@ def regular_polygon(r, n):
 # ============================================
 # Run Simulation for Polygonal Path Following
 # ============================================
-def run_experiment(q_init: np.ndarray, polygon_path_obj: PolygonPath, robot_params: Optional[RobotParameters] = None, max_acceleration = 10.0, verbose = True):
+def run_experiment(q_init: np.ndarray, polygon_path_obj: PolygonPath, robot_params: Optional[RobotParameters] = None, 
+                   max_acceleration = 10.0, verbose = True, use_viewer = False):
     
     if robot_params is None:
         robot_params = RobotParameters(L1=L1, L2=L2, m1=m1, m2=m2, c1=c1, c2=c2, g=g, I1=I1, I2=I2)
@@ -37,7 +38,8 @@ def run_experiment(q_init: np.ndarray, polygon_path_obj: PolygonPath, robot_para
     polygon_num_steps = int(polygon_sim_duration / dt)
     sim_params = SimulationParameters(dt=dt, num_steps=polygon_num_steps)
     
-    simulation_log = run_simulation(model, data, q_init, "pw", robot_params, sim_params, polygon_path_obj, max_acceleration=max_acceleration, save_operational_space=True)
+    simulation_log = run_simulation(model, data, q_init, "pw", robot_params, sim_params, polygon_path_obj, 
+                                    max_acceleration=max_acceleration, save_operational_space=True, use_viewer = use_viewer)
     
     if verbose:
         print("Polygonal Path Following simulation complete.\n")
@@ -103,7 +105,7 @@ def generate_GIF(simulation_log: list, sim_params: SimulationParameters, polygon
 # ============================================
 # Main function to run the polygonal path following experiment
 # ============================================
-def main(generate_plot=True, generate_gif=True):
+def main(use_viewer = True, generate_plot = True, generate_gif = True):
     
     # Initial joint angles
     q_init = inverse_kinematics(np.array([0, 1.5]), L1, L2)
@@ -120,8 +122,14 @@ def main(generate_plot=True, generate_gif=True):
 
     print(f"\nPolygonal Path Parameters: Vertices=\n{polygon_path_obj.vertices}")
     
+    
+    if use_viewer:
+        print("Running simulation with viewer...")
+    else:
+        print("Running simulation without viewer...")
+    
     # Run the simulation for polygonal path following
-    simulation_log, sim_params = run_experiment(q_init, polygon_path_obj, max_acceleration=max_acceleration, verbose=True)
+    simulation_log, sim_params = run_experiment(q_init, polygon_path_obj, max_acceleration=max_acceleration, verbose=True, use_viewer = use_viewer)
     
     # Create RobotParameters object for plotting and GIF generation
     RobotParameters_obj = RobotParameters(L1=L1, L2=L2, m1=m1, m2=m2, c1=c1, c2=c2, g=g, I1=I1, I2=I2)  

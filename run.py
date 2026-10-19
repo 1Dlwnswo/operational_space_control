@@ -10,6 +10,7 @@ SIMULATIONS = {
     "3": ("Polygon Path", "experiment.PolygonPath.simulation"),
 }
 
+USE_VIEWER = True
 GENERATE_PLOT = True
 GENERATE_GIF = False
 
@@ -38,6 +39,7 @@ def main():
 
         result = subprocess.run(
             [sys.executable, "-m", module,
+            "--viewer" if USE_VIEWER else "--no-viewer",
             "--plot" if GENERATE_PLOT else "--no-plot",
             "--gif" if GENERATE_GIF else "--no-gif"],
             cwd=PROJECT_ROOT,

@@ -1,10 +1,5 @@
-import os
-os.environ["MUJOCO_GL"] = "osmesa"
-
 import mujoco
 import numpy as np
-import imageio
-import matplotlib.pyplot as plt
 
 xml = """
 <mujoco>
@@ -13,13 +8,13 @@ xml = """
   <worldbody>
     <body name="link1" pos="0 0 0">
       <!-- MuJoCo will calculate mass and inertia from geom properties and density -->
-      <joint name="j1" type="hinge" axis="0 1 0"/>
+      <joint name="j1" type="hinge" axis="0 -1 0"/>
       <geom type="capsule" fromto="0 0 0 0 0 -1" size="0.05" density="160"/> <!-- Density added -->
       <site name="link1_end" pos="0 0 -1"/> <!-- Site at end of link 1 -->
 
       <body name="link2" pos="0 0 -1">
         <!-- MuJoCo will calculate mass and inertia from geom properties and density -->
-        <joint name="j2" type="hinge" axis="0 1 0"/>
+        <joint name="j2" type="hinge" axis="0 -1 0"/>
         <geom type="capsule" fromto="0 0 0 0 0 -1" size="0.05" density="120"/> <!-- Density added -->
         <site name="end_effector" pos="0 0 -1"/> <!-- Site at end of link 2 (end-effector) -->
       </body>
@@ -131,9 +126,7 @@ def inverse_kinematics(pos, L1, L2, q_current = None):
 
     return q1 if d1 < d2 else q2
 
-# ============================================
 # Define convergence time function for end-effector position
-# ============================================
 def get_ee_convergence_time(ee_x_log: np.ndarray, target_x: np.ndarray, dt, error_threshold=0.1):
 
     dist_errors = np.linalg.norm(np.array(ee_x_log) - target_x, axis=1)

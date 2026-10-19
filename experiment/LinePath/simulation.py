@@ -12,8 +12,8 @@ from experiment.experiment_runner import run_experiment_cli
 # ============================================
 # Run simulation for multiple target positions
 # ============================================
-def run_experiment(q_init: np.ndarray, target_positions: np.ndarray, robot_params: Optional[RobotParameters] = None, \
-    cruise_speed = 2.0, max_acceleration = 10.0, verbose = False):
+def run_experiment(q_init: np.ndarray, target_positions: np.ndarray, robot_params: Optional[RobotParameters] = None, 
+                   cruise_speed = 2.0, max_acceleration = 10.0, verbose = False, use_viewer = False):
 
     if robot_params is None:
         robot_params = RobotParameters(L1=L1, L2=L2, m1=m1, m2=m2, c1=c1, c2=c2, g=g, I1=I1, I2=I2)
@@ -33,7 +33,8 @@ def run_experiment(q_init: np.ndarray, target_positions: np.ndarray, robot_param
         
         path_obj = LinePath(start_point=ee_start_pos, end_point=np.array([target_x, target_z]), cruise_speed=cruise_speed)
 
-        current_simulation_log = run_simulation(model, data, q_init, "pw", robot_params, sim_params, path_obj, max_acceleration = max_acceleration, save_operational_space=True)
+        current_simulation_log = run_simulation(model, data, q_init, "pw", robot_params, sim_params, path_obj, 
+                                                max_acceleration = max_acceleration, save_operational_space=True, use_viewer = use_viewer)
 
         simulation_logs.append(current_simulation_log)
         
@@ -140,15 +141,20 @@ def generate_GIF(simulation_logs: list, sim_params: SimulationParameters, robot_
         target_trajectory_z=concatenated_target_z_log
 )
     
-def main(generate_plot=True, generate_gif=True):
+def main(use_viewer = True, generate_plot=True, generate_gif=True):
     # Define initial joint angles (q1, q2)
     q_init = np.array([np.pi*5/12, np.pi * (1 - 10/12)])
     
     # Generate a uniform grid of target positions
     target_positions = uniform_grid(L1+L2, 0.8)
 
+    if use_viewer:
+        print("Running simulation with viewer...")
+    else:
+        print("Running simulation without viewer...")
+
     # Run simulations for all target positions
-    simulation_logs, sim_params = run_experiment(q_init, target_positions, cruise_speed=2.0, max_acceleration=10.0, verbose=True)
+    simulation_logs, sim_params = run_experiment(q_init, target_positions, cruise_speed=2.0, max_acceleration=10.0, verbose=True, use_viewer = use_viewer)
 
     # Plot results for all target positions
     if generate_plot:

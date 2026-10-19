@@ -7,7 +7,7 @@ from simulation.acceleration_command import path_following, impedance_control
 
 
 def perform_simulation_step(model, data, robot_params: RobotParameters, impedance_control_params: ImpedanceControlParameters, \
-                            control_type: str, path_obj, max_acceleration, step_index: int = 0, save_operational_space = False):
+                            control_type: str, path_obj, max_acceleration, step_index: int = 0, save_operational_space = False, viewer = None):
 
     q = data.qpos.copy()
     qdot = data.qvel.copy()
@@ -56,10 +56,12 @@ def perform_simulation_step(model, data, robot_params: RobotParameters, impedanc
     tau = (J.T @ F).squeeze() # J.T(2,2) @ F(2,1) -> (2,1) then squeeze -> (2,)
 
     tau = np.clip(tau, -impedance_control_params.max_torque, impedance_control_params.max_torque)
-
+    
     data.ctrl[:] = tau
-
     mujoco.mj_step(model, data)
+
+    if viewer is not None:
+        viewer.sync()
 
     if save_operational_space:
         return SimulationResult(q, qdot, qddot, tau, a_cmd, True, x, xdot, xddot)

@@ -13,14 +13,16 @@ from experiment.experiment_runner import run_experiment_cli
 # ============================================
 # Run Simulation for Circular Path Tracking
 # ============================================
-def run_experiment(q_init: np.ndarray, circular_path_obj: CirclePath, robot_params: Optional[RobotParameters] = None, max_acceleration = 10.0, verbose = True):
+def run_experiment(q_init: np.ndarray, circular_path_obj: CirclePath, robot_params: Optional[RobotParameters] = None, 
+                   max_acceleration = 10.0, verbose = True, use_viewer = False):
     
     if robot_params is None:
         robot_params = RobotParameters(L1=L1, L2=L2, m1=m1, m2=m2, c1=c1, c2=c2, g=g, I1=I1, I2=I2)
 
     sim_params = SimulationParameters(dt=dt, num_steps=int(20 / dt))
 
-    simulation_log = run_simulation(model, data, q_init, "pw", robot_params, sim_params, circular_path_obj, max_acceleration=max_acceleration, save_operational_space=True)
+    simulation_log = run_simulation(model, data, q_init, "pw", robot_params, sim_params, circular_path_obj, 
+                                    max_acceleration = max_acceleration, save_operational_space = True, use_viewer = use_viewer)
     
     if verbose:
         print("Circular Path Tracking simulation complete.\n")
@@ -71,7 +73,7 @@ def generate_GIF(simulation_log: list, sim_params: SimulationParameters, circula
     )
 
 
-def main(generate_plot=True, generate_gif=True):
+def main(use_viewer = True, generate_plot = True, generate_gif = True):
     
     # Define initial joint angles (q1, q2)
     q_init = np.array([np.pi*5/12, np.pi * (1 - 10/12)])
@@ -83,8 +85,14 @@ def main(generate_plot=True, generate_gif=True):
     # Set a maximum acceleration
     max_acceleration = 15.0
     
+    
+    if use_viewer:
+        print("Running simulation with viewer...")
+    else:
+        print("Running simulation without viewer...")
+    
     # Run the simulation for circular path tracking
-    simulation_log, sim_params = run_experiment(q_init, circular_path_obj, max_acceleration=max_acceleration, verbose=True)
+    simulation_log, sim_params = run_experiment(q_init, circular_path_obj, max_acceleration = max_acceleration, verbose = True, use_viewer = use_viewer)
     
     # Create RobotParameters object for plotting and GIF generation
     RobotParameters_obj = RobotParameters(L1=L1, L2=L2, m1=m1, m2=m2, c1=c1, c2=c2, g=g, I1=I1, I2=I2)
