@@ -65,7 +65,6 @@ def generate_GIF(simulation_log: list, sim_params: SimulationParameters, circula
         q1_log_circular,
         q2_log_circular,
         sim_params,
-        robot_params,
         output_gif_filename='experiment/results/robot_arm_circular_path.gif',
         desired_total_gif_frames=200,
         full_desired_path_x=full_circular_path_x,

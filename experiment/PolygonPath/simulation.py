@@ -39,7 +39,7 @@ def run_experiment(q_init: np.ndarray, polygon_path_obj: PolygonPath, robot_para
         robot_params = get_robot_parameters(model)
 
     # Set SimulationParameters for the polygonal path
-    polygon_sim_duration = 20.0 # seconds
+    polygon_sim_duration = 10.0 # seconds
     sim_params = get_simulation_parameters(model)
     sim_params.num_steps = int(polygon_sim_duration / sim_params.dt)
     
@@ -100,7 +100,6 @@ def generate_GIF(simulation_log: list, sim_params: SimulationParameters, polygon
         q1_log_polygon,
         q2_log_polygon,
         sim_params,
-        robot_params,
         output_gif_filename='experiment/results/robot_arm_polygonal_path.gif',
         desired_total_gif_frames=200,
         full_desired_path_x=desired_polygon_path_x_gif,
@@ -119,8 +118,8 @@ def main(use_viewer = True, generate_plot = True, generate_gif = True):
     q_init = inverse_kinematics(polygon_vertices[0], 1.0, 1.0, polygon_vertices[0])
 
     # Define desired speed and maximum acceleration for the polygonal path
-    desired_speed = 3.0
-    max_acceleration = 45.0
+    desired_speed = 2.0
+    max_acceleration = 30.0
 
     # Create a PolygonalPath object
     polygon_path_obj = PolygonPath(vertices = polygon_vertices, desired_speed = desired_speed, stop_at_end = False)

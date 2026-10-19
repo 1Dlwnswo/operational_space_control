@@ -2,7 +2,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from src.parameters import RobotParameters, SimulationParameters
-from src.mujoco_setup import get_end_effector_position
+from src.robot.arm_2dof.kinematics import get_end_effector_position
 
 def plot_combined_results(processed_results, target_positions, sim_params: SimulationParameters, robot_params: RobotParameters, q_init):
     
