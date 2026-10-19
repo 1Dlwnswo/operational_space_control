@@ -9,7 +9,7 @@ from simulation.perform_simulation_step import perform_simulation_step
 # Define the simulation function
 # ============================================
 def run_simulation(model, data, q_init: np.ndarray, \
-                   control_type: str, robot_params: RobotParameters, sim_params: SimulationParameters, \
+                   control_type: str, sim_params: SimulationParameters, \
                    path_obj, max_acceleration = 10, save_operational_space = False, use_viewer = False):
     # Reset initial condition for each simulation
     data.qpos[0] = q_init[0]
@@ -36,7 +36,7 @@ def run_simulation(model, data, q_init: np.ndarray, \
             
             start_time = time.perf_counter() if viewer is not None else None
             
-            sim_results = perform_simulation_step(model, data, robot_params, impedance_control_params, \
+            sim_results = perform_simulation_step(model, data, impedance_control_params, \
                                                   control_type, path_obj, max_acceleration, step_index=i, save_operational_space = save_operational_space, viewer=viewer)
             simulation_log.append(sim_results)
             

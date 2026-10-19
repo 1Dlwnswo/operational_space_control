@@ -4,16 +4,16 @@ import numpy as np
 
 @dataclass
 class RobotParameters:
-    L1: float
-    L2: float
     m1: float
     m2: float
+    I1: float
+    I2: float
+    L1: float
+    L2: float
     c1: float
     c2: float
     g: float
-    I1: float
-    I2: float
-
+    
 
 @dataclass
 class SimulationParameters:

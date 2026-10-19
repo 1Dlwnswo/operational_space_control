@@ -1,6 +1,5 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from src.mujoco_setup import dt
 from src.parameters import RobotParameters, SimulationParameters
 from src.path.CirclePath import CirclePath
 
@@ -18,6 +17,8 @@ def plot_circular_path_results(x_log, q_log, torque_log, circular_path_obj: Circ
     q2_log_circular = q_log[:, 1]
     torque1_log_circular = torque_log[:, 0]
     torque2_log_circular = torque_log[:, 1]
+    
+    dt = sim_params.dt
     
     circular_path_center = circular_path_obj.center
     circular_path_radius = circular_path_obj.radius

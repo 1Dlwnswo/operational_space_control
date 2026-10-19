@@ -6,7 +6,7 @@ from src.mujoco_setup import get_jacobian, get_J_dot, get_end_effector_position,
 from simulation.acceleration_command import path_following, impedance_control
 
 
-def perform_simulation_step(model, data, robot_params: RobotParameters, impedance_control_params: ImpedanceControlParameters, \
+def perform_simulation_step(model, data, impedance_control_params: ImpedanceControlParameters, \
                             control_type: str, path_obj, max_acceleration, step_index: int = 0, save_operational_space = False, viewer = None):
 
     q = data.qpos.copy()
@@ -15,6 +15,9 @@ def perform_simulation_step(model, data, robot_params: RobotParameters, impedanc
 
     q1, q2 = q
     q1_dot, q2_dot = qdot
+    
+    from src.mujoco_setup import get_robot_parameters
+    robot_params = get_robot_parameters(model)
 
     # Forward kinematics
     J = get_jacobian(q1, q2, robot_params.L1, robot_params.L2)

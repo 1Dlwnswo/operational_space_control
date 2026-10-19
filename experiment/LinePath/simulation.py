@@ -1,6 +1,7 @@
 import numpy as np
 from src.parameters import RobotParameters, SimulationParameters
-from src.mujoco_setup import model, data, dt, L1, L2, m1, m2, c1, c2, g, I1, I2, get_end_effector_position, get_jacobian, get_ee_convergence_time
+from src.mujoco_setup import MODEL_PATH, load_model_and_data, get_robot_parameters, get_simulation_parameters
+from src.mujoco_setup import get_end_effector_position, get_jacobian, get_ee_convergence_time
 from src.path.LinePath import LinePath
 from simulation.run_simulation import run_simulation
 from experiment.LinePath.generate_grid import uniform_grid
@@ -14,12 +15,14 @@ from experiment.experiment_runner import run_experiment_cli
 # ============================================
 def run_experiment(q_init: np.ndarray, target_positions: np.ndarray, robot_params: Optional[RobotParameters] = None, 
                    cruise_speed = 2.0, max_acceleration = 10.0, verbose = False, use_viewer = False):
-
+    # Load the Mujoco model and data
+    model, data = load_model_and_data()
+    
     if robot_params is None:
-        robot_params = RobotParameters(L1=L1, L2=L2, m1=m1, m2=m2, c1=c1, c2=c2, g=g, I1=I1, I2=I2)
+        robot_params = get_robot_parameters(model)
 
     # Define simulation parameters based on cruise speed and max acceleration
-    sim_params = SimulationParameters(dt=dt, num_steps=int(4000/cruise_speed + 2000*cruise_speed/max_acceleration))
+    sim_params = get_simulation_parameters(model)
 
     # Initialize logs for all simulations
     simulation_logs = []
@@ -48,7 +51,7 @@ def run_experiment(q_init: np.ndarray, target_positions: np.ndarray, robot_param
 # Process simulation logs to extract relevant data for plotting
 # ============================================
 def process_simulation_logs(simulation_logs: list, sim_params: SimulationParameters, target_positions: np.ndarray, \
-    robot_params = RobotParameters(L1=L1, L2=L2, m1=m1, m2=m2, c1=c1, c2=c2, g=g, I1=I1, I2=I2)):
+    robot_params = get_robot_parameters(load_model_and_data("model/2dof_arm.xml")[0])):
     
     osc_all_q_logs = []
     osc_all_torque_logs = []
@@ -146,7 +149,7 @@ def main(use_viewer = True, generate_plot=True, generate_gif=True):
     q_init = np.array([np.pi*5/12, np.pi * (1 - 10/12)])
     
     # Generate a uniform grid of target positions
-    target_positions = uniform_grid(L1+L2, 0.8)
+    target_positions = uniform_grid(2.0, 0.8)
 
     if use_viewer:
         print("Running simulation with viewer...")
@@ -159,7 +162,7 @@ def main(use_viewer = True, generate_plot=True, generate_gif=True):
     # Plot results for all target positions
     if generate_plot:
         print("Generating plots...")
-        plot_results(simulation_logs, sim_params, q_init, target_positions, RobotParameters(L1=L1, L2=L2, m1=m1, m2=m2, c1=c1, c2=c2, g=g, I1=I1, I2=I2))
+        plot_results(simulation_logs, sim_params, q_init, target_positions, get_robot_parameters(load_model_and_data()[0]))
 
     # Generate GIF for the full trajectory across all target positions
     if generate_gif:

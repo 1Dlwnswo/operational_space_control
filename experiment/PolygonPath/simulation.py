@@ -1,6 +1,6 @@
 import numpy as np
 from src.parameters import RobotParameters, SimulationParameters
-from src.mujoco_setup import model, data, dt, L1, L2, m1, m2, c1, c2, g, I1, I2, inverse_kinematics
+from src.mujoco_setup import MODEL_PATH, load_model_and_data, get_robot_parameters
 from src.path.PolygonPath import PolygonPath
 from simulation.run_simulation import run_simulation
 from experiment.gif_generation import generate_robot_arm_full_trajectory_gif
@@ -29,9 +29,11 @@ def regular_polygon(r, n):
 # ============================================
 def run_experiment(q_init: np.ndarray, polygon_path_obj: PolygonPath, robot_params: Optional[RobotParameters] = None, 
                    max_acceleration = 10.0, verbose = True, use_viewer = False):
+    # Load the Mujoco model and data
+    model, data = load_model_and_data("model/2dof_arm.xml")
     
     if robot_params is None:
-        robot_params = RobotParameters(L1=L1, L2=L2, m1=m1, m2=m2, c1=c1, c2=c2, g=g, I1=I1, I2=I2)
+        robot_params = get_robot_parameters(load_model_and_data("model/2dof_arm.xml")[0])
 
     # Set SimulationParameters for the polygonal path
     polygon_sim_duration = 20.0 # seconds
@@ -132,7 +134,7 @@ def main(use_viewer = True, generate_plot = True, generate_gif = True):
     simulation_log, sim_params = run_experiment(q_init, polygon_path_obj, max_acceleration=max_acceleration, verbose=True, use_viewer = use_viewer)
     
     # Create RobotParameters object for plotting and GIF generation
-    RobotParameters_obj = RobotParameters(L1=L1, L2=L2, m1=m1, m2=m2, c1=c1, c2=c2, g=g, I1=I1, I2=I2)  
+    RobotParameters_obj = get_robot_parameters(load_model_and_data(MODEL_PATH)[0])
     
     # Plot results for polygonal path following
     if generate_plot:

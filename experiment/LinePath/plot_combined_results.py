@@ -2,7 +2,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from src.parameters import RobotParameters, SimulationParameters
-from src.mujoco_setup import dt, get_end_effector_position
+from src.mujoco_setup import get_end_effector_position
 
 def plot_combined_results(processed_results, target_positions, sim_params: SimulationParameters, robot_params: RobotParameters, q_init):
     
@@ -10,7 +10,7 @@ def plot_combined_results(processed_results, target_positions, sim_params: Simul
     osc_all_dist_logs, osc_ee_convergence_times, osc_all_manipulability_logs = processed_results
     
     # Regenerate time_log to match the current simulation steps
-    time_log = [i * dt for i in range(sim_params.num_steps)]
+    time_log = [i * sim_params.dt for i in range(sim_params.num_steps)]
 
     # Calculate initial end-effector position (constant for all targets)
     initial_ee_pos = get_end_effector_position(q_init[0], q_init[1], robot_params.L1, robot_params.L2)

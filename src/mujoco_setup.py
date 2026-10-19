@@ -1,52 +1,33 @@
 import mujoco
 import numpy as np
 
-xml = """
-<mujoco>
-  <option gravity="0 0 -9.81" timestep="0.001"/>
+MODEL_PATH = "model/2dof_arm.xml"
 
-  <worldbody>
-    <body name="link1" pos="0 0 0">
-      <!-- MuJoCo will calculate mass and inertia from geom properties and density -->
-      <joint name="j1" type="hinge" axis="0 -1 0"/>
-      <geom type="capsule" fromto="0 0 0 0 0 -1" size="0.05" density="160"/> <!-- Density added -->
-      <site name="link1_end" pos="0 0 -1"/> <!-- Site at end of link 1 -->
+def load_model_and_data(model_path):
+    model = mujoco.MjModel.from_xml_path(model_path)
+    data = mujoco.MjData(model)
+    return model, data
 
-      <body name="link2" pos="0 0 -1">
-        <!-- MuJoCo will calculate mass and inertia from geom properties and density -->
-        <joint name="j2" type="hinge" axis="0 -1 0"/>
-        <geom type="capsule" fromto="0 0 0 0 0 -1" size="0.05" density="120"/> <!-- Density added -->
-        <site name="end_effector" pos="0 0 -1"/> <!-- Site at end of link 2 (end-effector) -->
-      </body>
-    </body>
-  </worldbody>
+def get_robot_parameters(model):
+    from src.parameters import RobotParameters
 
-  <actuator>
-    <motor joint="j1"/>
-    <motor joint="j2"/>
-  </actuator>
-</mujoco>
-"""
+    m1 = model.body_mass[model.body('link1').id]
+    m2 = model.body_mass[model.body('link2').id]
+    I1 = model.body_inertia[model.body('link1').id][1] # Moment of inertia for link1 about its joint axis
+    I2 = model.body_inertia[model.body('link2').id][1] # Moment of inertia for link2 about its joint axis
+    L1 = 1.0
+    L2 = 1.0
+    c1 = 0.5 # Center of mass for link1 is at L1/2 relative to its body frame
+    c2 = 0.5 # Center of mass for link2 is at L2/2 relative to its body frame
+    g = abs(model.opt.gravity[2]) # Magnitude of gravity (assuming gravity is along -Z)
 
-model = mujoco.MjModel.from_xml_string(xml)
-data = mujoco.MjData(model)
+    return RobotParameters(m1=m1, m2=m2, I1=I1, I2=I2, L1=L1, L2=L2, c1=c1, c2=c2, g=g)
 
-dt = model.opt.timestep
-num_simulation_steps = 6000
-time_log = [i * dt for i in range(num_simulation_steps)]
-
-# Define link lengths based on XML geom tags (fromto = [x1 y1 z1 x2 y2 z2], so length is 1.0 for each)
-L1 = 1.0
-L2 = 1.0
-
-# Extract physics parameters from the model
-g = abs(model.opt.gravity[2]) # Magnitude of gravity (assuming gravity is along -Z)
-m1 = model.body_mass[model.body('link1').id]
-m2 = model.body_mass[model.body('link2').id]
-c1 = 0.5 # Center of mass for link1 is at L1/2 relative to its body frame
-c2 = 0.5 # Center of mass for link2 is at L2/2 relative to its body frame
-I1 = model.body_inertia[model.body('link1').id][1] # Moment of inertia for link1 about its joint axis
-I2 = model.body_inertia[model.body('link2').id][1] # Moment of inertia for link2 about its joint axis
+def get_simulation_parameters(model):
+    from src.parameters import SimulationParameters
+    dt = model.opt.timestep
+    num_steps = 6000
+    return SimulationParameters(dt=dt, num_steps=num_steps)
 
 def get_end_effector_position(q1, q2, L1, L2):
     x = L1 * np.sin(q1) + L2 * np.sin(q1 + q2)
