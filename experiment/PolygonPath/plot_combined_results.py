@@ -1,6 +1,8 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from src.mujoco_setup import dt, calcuate_inertia_matrix, calculate_coriolis_centrifugal_torques, calculate_gravity_torques, get_jacobian, get_J_dot
+
+from src.robot.arm_2dof.dynamics import calcuate_inertia_matrix, calculate_coriolis_centrifugal_torques, calculate_gravity_torques
+from src.robot.arm_2dof.kinematics import get_jacobian, get_J_dot
 
 def plot_polygonal_path_results(x_log, q_log, torque_log, polygon_path_obj, sim_params, robot_params):
         
@@ -31,7 +33,7 @@ def plot_polygonal_path_results(x_log, q_log, torque_log, polygon_path_obj, sim_
 
     # --- Joint Angles and Torques over Time ---
 
-    time_log = [i * dt for i in range(sim_params.num_steps)]
+    time_log = [i * sim_params.dt for i in range(sim_params.num_steps)]
 
     ax_q.plot(time_log, q1_log, label='Joint 1 Angle')
     ax_q.plot(time_log, q2_log, label='Joint 2 Angle')

@@ -4,16 +4,16 @@ import numpy as np
 
 @dataclass
 class RobotParameters:
-    L1: float
-    L2: float
     m1: float
     m2: float
+    I1: float
+    I2: float
+    L1: float
+    L2: float
     c1: float
     c2: float
     g: float
-    I1: float
-    I2: float
-
+    
 
 @dataclass
 class SimulationParameters:
@@ -32,12 +32,12 @@ class ImpedanceControlParameters:
 class SimulationResult:
     q: np.ndarray
     qdot: np.ndarray
-    qddot: np.ndarray
 
     tau: np.ndarray
     a_cmd: np.ndarray
 
     save_os: Optional[np.ndarray] = None
+    qddot: Optional[np.ndarray] = None
     x: Optional[np.ndarray] = None
     xdot: Optional[np.ndarray] = None
     xddot: Optional[np.ndarray] = None

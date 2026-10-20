@@ -2,7 +2,7 @@ import numpy as np
 import imageio
 import matplotlib.pyplot as plt
 import os
-from src.mujoco_setup import get_end_effector_position
+from src.robot.arm_2dof.kinematics import get_end_effector_position
 import tempfile
 
 def plot_robot_arm(ax, q1, q2, L1, L2, current_ee_x_history, current_ee_z_history, desired_full_path_x=None, desired_full_path_z=None):
@@ -45,7 +45,7 @@ def plot_robot_arm(ax, q1, q2, L1, L2, current_ee_x_history, current_ee_z_histor
     ax.grid(True)
 
 
-def generate_robot_arm_full_trajectory_gif(concatenated_q1_log, concatenated_q2_log, sim_params, robot_params, output_gif_filename='robot_arm_full_trajectory.gif', \
+def generate_robot_arm_full_trajectory_gif(concatenated_q1_log, concatenated_q2_log, sim_params, output_gif_filename='robot_arm_full_trajectory.gif', \
     desired_total_gif_frames=200, full_desired_path_x=None, full_desired_path_z=None, target_trajectory_x=None, target_trajectory_z=None):
     """
     Generates a GIF visualizing the robot arm's full trajectory.
@@ -88,14 +88,17 @@ def generate_robot_arm_full_trajectory_gif(concatenated_q1_log, concatenated_q2_
     for i in range(0, total_sim_steps_for_gif, frame_interval):
         q1 = concatenated_q1_log[i]
         q2 = concatenated_q2_log[i]
+        
+        L1 = 1.0
+        L2 = 1.0
 
         # Calculate current end-effector position
-        x_ee_current, z_ee_current = get_end_effector_position(q1, q2, robot_params.L1, robot_params.L2)
+        x_ee_current, z_ee_current = get_end_effector_position(q1, q2, L1, L2)
         ee_x_history.append(x_ee_current)
         ee_z_history.append(z_ee_current)
 
         ax.clear()
-        plot_robot_arm(ax, q1, q2, robot_params.L1, robot_params.L2,
+        plot_robot_arm(ax, q1, q2, L1, L2,
                        ee_x_history, ee_z_history, # Pass the history of actual EE positions
                        full_desired_path_x, full_desired_path_z) # Pass the full desired path
 

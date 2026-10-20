@@ -1,7 +1,7 @@
 # @title
 import numpy as np
 from src.parameters import RobotParameters, SimulationParameters
-from src.mujoco_setup import model, data, dt, L1, L2, m1, m2, c1, c2, g, I1, I2
+from src.mujoco_setup import MODEL_PATH, load_model_and_data, get_robot_parameters, get_simulation_parameters
 from src.path.CirclePath import CirclePath
 from simulation.run_simulation import run_simulation
 from experiment.gif_generation import generate_robot_arm_full_trajectory_gif
@@ -13,15 +13,15 @@ from experiment.experiment_runner import run_experiment_cli
 # ============================================
 # Run Simulation for Circular Path Tracking
 # ============================================
-def run_experiment(q_init: np.ndarray, circular_path_obj: CirclePath, robot_params: Optional[RobotParameters] = None, 
+def run_experiment(q_init: np.ndarray, circular_path_obj: CirclePath, 
                    max_acceleration = 10.0, verbose = True, use_viewer = False):
+    # Load the Mujoco model and data
+    model, data = load_model_and_data(MODEL_PATH)
     
-    if robot_params is None:
-        robot_params = RobotParameters(L1=L1, L2=L2, m1=m1, m2=m2, c1=c1, c2=c2, g=g, I1=I1, I2=I2)
+    sim_params = get_simulation_parameters(model)
+    sim_params.num_steps = int(20/sim_params.dt)
 
-    sim_params = SimulationParameters(dt=dt, num_steps=int(20 / dt))
-
-    simulation_log = run_simulation(model, data, q_init, "pw", robot_params, sim_params, circular_path_obj, 
+    simulation_log = run_simulation(model, data, q_init, "pw", sim_params, circular_path_obj, 
                                     max_acceleration = max_acceleration, save_operational_space = True, use_viewer = use_viewer)
     
     if verbose:
@@ -65,7 +65,6 @@ def generate_GIF(simulation_log: list, sim_params: SimulationParameters, circula
         q1_log_circular,
         q2_log_circular,
         sim_params,
-        robot_params,
         output_gif_filename='experiment/results/robot_arm_circular_path.gif',
         desired_total_gif_frames=200,
         full_desired_path_x=full_circular_path_x,
@@ -85,17 +84,16 @@ def main(use_viewer = True, generate_plot = True, generate_gif = True):
     # Set a maximum acceleration
     max_acceleration = 15.0
     
-    
     if use_viewer:
         print("Running simulation with viewer...")
     else:
         print("Running simulation without viewer...")
     
     # Run the simulation for circular path tracking
-    simulation_log, sim_params = run_experiment(q_init, circular_path_obj, max_acceleration = max_acceleration, verbose = True, use_viewer = use_viewer)
+    simulation_log, sim_params = run_experiment(q_init, circular_path_obj, max_acceleration = max_acceleration, use_viewer = use_viewer)
     
     # Create RobotParameters object for plotting and GIF generation
-    RobotParameters_obj = RobotParameters(L1=L1, L2=L2, m1=m1, m2=m2, c1=c1, c2=c2, g=g, I1=I1, I2=I2)
+    RobotParameters_obj = get_robot_parameters(load_model_and_data(MODEL_PATH)[0])
     
     # Plot results for circular path tracking
     if generate_plot:

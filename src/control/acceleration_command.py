@@ -12,7 +12,9 @@ def path_following(x, xdot, path_obj, impedance_control_params: ImpedanceControl
 
     # Clip acceleration if its magnitude is greater than max_acceleration
     a_magnitude = np.linalg.norm(a_cmd)
-    a_cmd = np.clip(a_magnitude, 0, max_acceleration) * a_cmd / a_magnitude
+
+    if a_magnitude > max_acceleration:
+        a_cmd = a_cmd * (max_acceleration / a_magnitude)
 
     return a_cmd
 
