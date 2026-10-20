@@ -47,3 +47,24 @@ class LinePath:
             reference_acceleration = np.zeros(2)
 
         return reference_point, reference_velocity, reference_acceleration
+    
+    def calculate_path_errors(self, x_log: np.ndarray):
+
+        x_log = np.asarray(x_log, dtype=float)
+        
+        if x_log.ndim != 2 or x_log.shape[1] != 2:
+            raise ValueError("x_log must have shape (N, 2).")
+        if x_log.shape[0] == 0:
+            raise ValueError("x_log must contain at least one position.")
+
+        if self.length == 0:
+            closest_points = np.broadcast_to(self.start_point, x_log.shape)
+        else:
+            offsets = x_log - self.start_point
+            projections = offsets @ self.unit_direction
+            projections = np.clip(projections, 0.0, self.length)
+            closest_points = self.start_point + projections[:, None] * self.unit_direction
+
+        errors = np.linalg.norm(x_log - closest_points, axis=1)
+        
+        return errors

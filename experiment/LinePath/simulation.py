@@ -1,15 +1,18 @@
 import numpy as np
+from typing import Optional
+
 from src.parameters import RobotParameters, SimulationParameters
 from src.mujoco_setup import MODEL_PATH, load_model_and_data, get_robot_parameters, get_simulation_parameters
 from src.robot.arm_2dof.kinematics import get_end_effector_position, get_jacobian
 from src.utils import get_ee_convergence_time
 from src.path.LinePath import LinePath
+from src.metrics.metrics import calculate_linepath_rmse
 
 from simulation.run_simulation import run_simulation
+
 from experiment.LinePath.generate_grid import uniform_grid
 from experiment.LinePath.plot_combined_results import plot_combined_results
 from experiment.gif_generation import generate_robot_arm_full_trajectory_gif
-from typing import Optional
 from experiment.experiment_runner import run_experiment_cli
 
 # ============================================
@@ -43,6 +46,11 @@ def run_experiment(q_init: np.ndarray, target_positions: np.ndarray, robot_param
                                                 max_acceleration = max_acceleration, save_operational_space = True, use_viewer = use_viewer)
 
         simulation_logs.append(current_simulation_log)
+        
+        # Calculate RMSE for the current simulation and log the result (temporary test)
+        x_log = np.array([sim_results.x for sim_results in current_simulation_log])
+        rmse = calculate_linepath_rmse(x_log = x_log, linepath_obj = path_obj)
+        print(f"Simulation {idx + 1}/{len(target_positions)} completed. RMSE: {rmse:.4f}")
         
     if verbose:
         print("Simulation completed for all target positions.")
