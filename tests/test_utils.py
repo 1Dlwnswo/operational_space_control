@@ -24,6 +24,6 @@ def test_convergence_time_is_after_last_sample_outside_threshold():
 
 
 def test_convergence_time_is_zero_when_always_within_threshold():
-    positions = np.array([[1.0, 0.0], [1.02, 0.0]])
+    positions = np.array([[1.0, 0.0], [1.005, 0.0]])
 
     assert get_ee_convergence_time(positions, np.array([1.0, 0.0]), 0.01) == 0.0

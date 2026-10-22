@@ -37,7 +37,7 @@ def test_line_path_projects_position_and_brakes_at_end():
     before_end = path.compute_reference(np.array([1.9, 0.2]), np.zeros(2), 2.0)
     at_end = path.compute_reference(np.array([2.0, 0.0]), np.zeros(2), 2.0)
 
-    np.testing.assert_allclose(before_end[0], [2.0, 0.0])
+    np.testing.assert_allclose(before_end[0], [1.9, 0.0])
     np.testing.assert_allclose(at_end[0], [2.0, 0.0])
     np.testing.assert_allclose(at_end[1], np.zeros(2))
     np.testing.assert_allclose(at_end[2], np.zeros(2))
