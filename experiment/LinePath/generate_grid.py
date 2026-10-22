@@ -1,24 +1,24 @@
 import numpy as np
 
 def uniform_grid(workspace_radius, step_size):
-    # Define target end-effector positions (grid distribution)
-
-    # Generate grid points
-    x_range = np.arange(-workspace_radius, workspace_radius + step_size, step_size)
-    z_range = np.arange(-workspace_radius, workspace_radius + step_size, step_size)
+    x_indices = np.arange(
+        np.ceil(-workspace_radius / step_size),
+        np.floor(workspace_radius / step_size) + 1,
+    )
+    z_indices = np.arange(
+        np.ceil(-workspace_radius / step_size - 0.5),
+        np.floor(workspace_radius / step_size - 0.5) + 1,
+    )
+    x_range = z_indices * step_size
+    z_range = (x_indices + 0.5) * step_size
 
     target_positions = []
     for x in x_range:
-      for z in z_range:
-        # Check if the point is within the circular workspace
-          if np.sqrt(x**2 + z**2) <= workspace_radius:
-            target_positions.append((x, z))
+        for z in z_range:
+            if np.hypot(x, z) < workspace_radius:
+                target_positions.append((x, z))
 
-    # Remove duplicates (though grid generation typically doesn't create them unless floats are tricky)
-    target_positions = list(set(target_positions))
-
-    # Sort for consistent plotting/ordering: Z-value first (smallest), then X-value (smallest)
-    target_positions.sort(key=lambda p: (p[1], p[0]))
+    target_positions.sort(key=lambda p: (p[0] + p[1], p[0]))
 
     return target_positions
 
@@ -30,3 +30,21 @@ def linear_grid(initial_ee_pos, final_ee_pos, n):
         z = initial_ee_pos[1] + t * (final_ee_pos[1] - initial_ee_pos[1])
         target_positions.append((x, z))
     return target_positions
+
+def main():
+    grid = uniform_grid(2.0, 0.8)
+    
+    import matplotlib.pyplot as plt
+    
+    circle = plt.Circle((0, 0), 2.0, facecolor='gray', alpha=0.1, fill=True, linestyle='--', edgecolor='black')
+    plt.gca().add_patch(circle)
+    
+    plt.scatter(*zip(*grid))
+    plt.xlabel('X-axis')
+    plt.ylabel('Z-axis')
+    plt.title('Uniform Grid Points')
+    plt.axis('equal')
+    plt.show()
+        
+if __name__ == "__main__":
+    main()

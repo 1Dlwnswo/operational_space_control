@@ -3,10 +3,9 @@ from typing import Optional
 
 from src.parameters import RobotParameters, SimulationParameters
 from src.mujoco_setup import MODEL_PATH, load_model_and_data, get_robot_parameters, get_simulation_parameters
-from src.robot.arm_2dof.kinematics import get_end_effector_position, get_jacobian
-from src.utils import get_ee_convergence_time
+from src.robot.arm_2dof.kinematics import get_end_effector_position
 from src.path.LinePath import LinePath
-from src.metrics.metrics import calculate_linepath_rmse
+from src.metrics.metrics import metrics
 
 from simulation.run_simulation import run_simulation
 
@@ -28,10 +27,11 @@ def run_experiment(q_init: np.ndarray, target_positions: np.ndarray, robot_param
 
     # Define simulation parameters based on cruise speed and max acceleration
     sim_params = get_simulation_parameters(model)
-    sim_params.num_steps=int(4000/cruise_speed + 2000*cruise_speed/max_acceleration)
+    sim_params.num_steps=int(4000/cruise_speed + 3000*cruise_speed/max_acceleration)
 
     # Initialize logs for all simulations
     simulation_logs = []
+    simulation_metrics = []
 
     if verbose:
         print(f"Number of OSC simulations: {len(target_positions)}")
@@ -42,82 +42,19 @@ def run_experiment(q_init: np.ndarray, target_positions: np.ndarray, robot_param
         
         path_obj = LinePath(start_point=ee_start_pos, end_point=np.array([target_x, target_z]), cruise_speed=cruise_speed)
 
-        current_simulation_log = run_simulation(model, data, q_init, "pw", sim_params, path_obj, 
+        sim_log = run_simulation(model, data, q_init, "pw", sim_params, path_obj, 
                                                 max_acceleration = max_acceleration, save_operational_space = True, use_viewer = use_viewer)
-
-        simulation_logs.append(current_simulation_log)
+        simulation_metric = metrics(sim_log, sim_params, path_obj, robot_params)
         
-        # Calculate RMSE for the current simulation and log the result (temporary test)
-        x_log = np.array([sim_results.x for sim_results in current_simulation_log])
-        rmse = calculate_linepath_rmse(x_log = x_log, linepath_obj = path_obj)
-        print(f"Simulation {idx + 1}/{len(target_positions)} completed. RMSE: {rmse:.4f}")
+        simulation_logs.append(sim_log)
+        simulation_metrics.append(simulation_metric)
+        
+        print(f"Simulation {idx + 1}/{len(target_positions)}: RMSE = {simulation_metric.rmse:.4f}")
         
     if verbose:
         print("Simulation completed for all target positions.")
     
-    return simulation_logs, sim_params
-
-
-# ============================================
-# Process simulation logs to extract relevant data for plotting
-# ============================================
-def process_simulation_logs(simulation_logs: list, sim_params: SimulationParameters, target_positions: np.ndarray, robot_params: RobotParameters):
-    
-    osc_all_q_logs = []
-    osc_all_torque_logs = []
-    osc_all_a_cmd_logs = []
-    osc_all_xdot_logs = []
-    osc_all_xddot_logs = []
-    osc_all_dist_logs = []
-    osc_ee_convergence_times = []
-    osc_all_manipulability_logs = []
-    osc_all_x_logs = []
-
-    for idx, log in enumerate(simulation_logs):
-        # Extract data from the simulation log
-        q_log = np.array([sim_result.q for sim_result in log])
-        torque_log = np.array([sim_result.tau for sim_result in log])
-        a_cmd_log = np.array([sim_result.a_cmd for sim_result in log])
-        
-        x_log = np.array([sim_result.x for sim_result in log])
-        xdot_log = np.array([sim_result.xdot for sim_result in log])
-        xddot_log = np.array([sim_result.xddot for sim_result in log])
-        
-        osc_all_q_logs.append(q_log)
-        osc_all_torque_logs.append(torque_log)
-        osc_all_a_cmd_logs.append(a_cmd_log)
-        osc_all_x_logs.append(x_log)
-        osc_all_xdot_logs.append(xdot_log)
-        osc_all_xddot_logs.append(xddot_log)
-
-        # Calculate distance error over time
-        dist_log_current_sim = np.linalg.norm(np.array(x_log) - np.array(target_positions[idx]), axis=1)
-        osc_all_dist_logs.append(dist_log_current_sim)
-
-        # Calculate convergence time
-        conv_time_ee = get_ee_convergence_time(np.array(x_log), np.array(target_positions[idx]), sim_params.dt)
-        osc_ee_convergence_times.append(conv_time_ee)  
-        
-        # Calulate Manipulability over time
-        current_sim_manipulability = []
-        for q1_k, q2_k in q_log:
-            J_k = get_jacobian(q1_k, q2_k, robot_params.L1, robot_params.L2)
-            manipulability_k = np.linalg.det(J_k @ J_k.T)
-            current_sim_manipulability.append(manipulability_k)
-        osc_all_manipulability_logs.append(current_sim_manipulability)
-    
-    return (osc_all_q_logs, osc_all_torque_logs, osc_all_a_cmd_logs, 
-            osc_all_x_logs, osc_all_xdot_logs, osc_all_xddot_logs, 
-            osc_all_dist_logs, osc_ee_convergence_times, osc_all_manipulability_logs)
-
-
-# ============================================
-# Plot combined results for all target positions
-# ============================================
-def plot_results(simulation_logs: list, sim_params: SimulationParameters, q_init: np.ndarray, target_positions: np.ndarray, robot_params: RobotParameters):
-    
-    processed_results = process_simulation_logs(simulation_logs, sim_params, target_positions, robot_params)
-    plot_combined_results(processed_results, target_positions, sim_params, robot_params, q_init)
+    return simulation_logs, simulation_metrics, sim_params
 
 
 # ============================================
@@ -166,12 +103,12 @@ def main(use_viewer = True, generate_plot=True, generate_gif=True):
         print("Running simulation without viewer...")
 
     # Run simulations for all target positions
-    simulation_logs, sim_params = run_experiment(q_init, target_positions, cruise_speed=2.0, max_acceleration=10.0, verbose=True, use_viewer = use_viewer)
+    simulation_logs, simulation_metrics, sim_params = run_experiment(q_init, target_positions, cruise_speed=2.0, max_acceleration=10.0, verbose=True, use_viewer = use_viewer)
 
     # Plot results for all target positions
     if generate_plot:
         print("Generating plots...")
-        plot_results(simulation_logs, sim_params, q_init, target_positions, get_robot_parameters(load_model_and_data(MODEL_PATH)[0]))
+        plot_combined_results(simulation_logs, simulation_metrics, q_init, target_positions, sim_params, get_robot_parameters(load_model_and_data(MODEL_PATH)[0]))
 
     # Generate GIF for the full trajectory across all target positions
     if generate_gif:
