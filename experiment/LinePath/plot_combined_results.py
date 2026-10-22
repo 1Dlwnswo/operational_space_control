@@ -18,6 +18,7 @@ def process_simulation_logs(simulation_logs: list, simulation_metrics: list):
     osc_all_xdot_logs = []
     osc_all_xddot_logs = []
     
+    osc_all_rmse_log = []
     osc_all_error_logs = []
     osc_all_dist_logs = []
     osc_ee_convergence_times = []
@@ -33,6 +34,7 @@ def process_simulation_logs(simulation_logs: list, simulation_metrics: list):
         xdot_log = np.array([sim_result.xdot for sim_result in log])
         xddot_log = np.array([sim_result.xddot for sim_result in log])
         
+        rmse_log = metrics.rmse
         error_log = metrics.errors
         dist_logs = metrics.distance_errors
         convergence_time = metrics.convergence_time
@@ -45,6 +47,7 @@ def process_simulation_logs(simulation_logs: list, simulation_metrics: list):
         osc_all_xdot_logs.append(xdot_log)
         osc_all_xddot_logs.append(xddot_log)
         
+        osc_all_rmse_log.append(rmse_log)
         osc_all_error_logs.append(error_log)
         osc_all_dist_logs.append(dist_logs)
         osc_ee_convergence_times.append(convergence_time)
@@ -52,51 +55,56 @@ def process_simulation_logs(simulation_logs: list, simulation_metrics: list):
 
     return (osc_all_q_logs, osc_all_torque_logs, osc_all_a_cmd_logs,
             osc_all_x_logs, osc_all_xdot_logs, osc_all_xddot_logs,
-            osc_all_error_logs, osc_all_dist_logs, osc_ee_convergence_times,
+            osc_all_error_logs, osc_all_rmse_log, 
+            osc_all_dist_logs, osc_ee_convergence_times,
             osc_all_manipulability_logs)
 
 
 def plot_combined_results(simulation_logs: list, simulation_metrics: list, q_init: np.ndarray, target_positions: np.ndarray, sim_params: SimulationParameters, robot_params: RobotParameters):
     
-    osc_all_q_logs, osc_all_torque_logs, osc_all_a_cmd_logs, osc_all_x_logs, osc_all_xdot_logs, osc_all_xddot_logs, \
-    osc_all_error_logs, osc_all_dist_logs, osc_ee_convergence_times, osc_all_manipulability_logs = process_simulation_logs(simulation_logs, simulation_metrics)
+    osc_all_q_logs, osc_all_torque_logs, osc_all_a_cmd_logs, \
+        osc_all_x_logs, osc_all_xdot_logs, osc_all_xddot_logs, \
+            osc_all_error_logs, osc_all_rmse_log, osc_all_dist_logs, \
+                osc_ee_convergence_times, osc_all_manipulability_logs = process_simulation_logs(simulation_logs, simulation_metrics)
     
     # Regenerate time_log to match the current simulation steps
     time_log = [i * sim_params.dt for i in range(sim_params.num_steps)]
 
     # Calculate initial end-effector position (constant for all targets)
     initial_ee_pos = get_end_effector_position(q_init[0], q_init[1], robot_params.L1, robot_params.L2)
+    
+    height = len(simulation_logs)
 
-    fig = plt.figure(figsize=(12, 32))
+    fig = plt.figure(figsize=(24, height))
     fig.suptitle('Operational Space Control - Combined Simulation Results', y=0.99, fontsize=20)
 
     # Create subplots using gridspec-like indexing for flexible layout
     # Row 1: Joint 1 Angle, Joint 2 Angle, EE Distance Error
-    ax_q1 = fig.add_subplot(7, 2, 1)
-    ax_q2 = fig.add_subplot(7, 2, 2)
+    ax_q1 = fig.add_subplot(4, 4, 1)
+    ax_q2 = fig.add_subplot(4, 4, 2)
 
     # Row 2: Joint 1 Torque, Joint 2 Torque
-    ax_q1_torque = fig.add_subplot(7, 2, 3)
-    ax_q2_torque = fig.add_subplot(7, 2, 4)
+    ax_q1_torque = fig.add_subplot(4, 4, 3)
+    ax_q2_torque = fig.add_subplot(4, 4, 4)
 
     # Row 3: Acceleration Command, Acceleration Magnitude
-    ax_a_cmd = fig.add_subplot(7, 2, 5)
-    ax_accel = fig.add_subplot(7, 2, 6)
+    ax_a_cmd = fig.add_subplot(4, 4, 5)
+    ax_accel = fig.add_subplot(4, 4, 6)
 
     # Row 4: End Effector Speed, Distance Error
-    ax_ee_speed = fig.add_subplot(7, 2, 7)
-    ax_dist = fig.add_subplot(7, 2, 8)
+    ax_ee_speed = fig.add_subplot(4, 4, 7)
+    ax_dist = fig.add_subplot(4, 4, 8)
 
     # Row 5: Convergence Time, Manipulability
-    ax_conv = fig.add_subplot(7, 2, 9)
-    ax_manip = fig.add_subplot(7, 2, 10)
+    ax_conv = fig.add_subplot(4, 4, 9)
+    ax_manip = fig.add_subplot(4, 4, 10)
 
     # Row 6: Average Speed, EE Trajectory
-    ax_avg_speed = fig.add_subplot(7, 2, 11)
-    ax_ee_traj = fig.add_subplot(7, 2, 12)
+    ax_avg_speed = fig.add_subplot(4, 4, 11)
+    ax_ee_traj = fig.add_subplot(4, 4, 12)
 
     # Row 7: Path Tracking Error
-    ax_error = fig.add_subplot(7, 2, 13)
+    ax_error = fig.add_subplot(4, 4, 13)
 
     # --- Plot 1: Joint 1 Angle over Time ---
     for idx, (target_x, target_z) in enumerate(target_positions):
@@ -198,18 +206,6 @@ def plot_combined_results(simulation_logs: list, simulation_metrics: list, q_ini
     ax_manip.grid(True)
     ax_manip.legend(loc='upper right', fontsize='x-small')
 
-    # --- Plot 13: Path Tracking Error over Time ---
-    for idx, (target_x, target_z) in enumerate(target_positions):
-        ax_error.plot(
-            time_log[::10], osc_all_error_logs[idx][::10],
-            label=f'Target ({target_x:.2f}, {target_z:.2f})'
-        )
-    ax_error.set_title('Path Tracking Error')
-    ax_error.set_xlabel("Time [s]")
-    ax_error.set_ylabel("Path Error [m]")
-    ax_error.grid(True)
-    ax_error.legend(loc='upper right', fontsize='x-small')
-
     # --- Plot 11: Average End-effector Speed ---
     average_speeds = []
     for idx, (target_x, target_z) in enumerate(target_positions):
@@ -237,7 +233,7 @@ def plot_combined_results(simulation_logs: list, simulation_metrics: list, q_ini
 
     start_ee_x = robot_params.L1 * np.sin(q_init[0]) + robot_params.L2 * np.sin(q_init[0] + q_init[1])
     start_ee_z = -robot_params.L1 * np.cos(q_init[0]) - robot_params.L2 * np.cos(q_init[0] + q_init[1])
-    ax_ee_traj.plot(start_ee_x, start_ee_z, 'go', markersize=8, label='Start')
+    ax_ee_traj.plot(start_ee_x, start_ee_z, 'go', markersize=6, label='Start')
 
     ax_ee_traj.set_title('EE Path')
     ax_ee_traj.set_xlabel("X Position [m]")
@@ -248,8 +244,20 @@ def plot_combined_results(simulation_logs: list, simulation_metrics: list, q_ini
         # Extract x and z components from the ee_x_log for the current target
         ee_x_coords = osc_all_x_logs[idx][:, 0]
         ee_z_coords = osc_all_x_logs[idx][:, 1]
+        ax_ee_traj.plot(target_x, target_z, 'rx', markersize=6, mew=2) # Mark target points
         ax_ee_traj.plot(ee_x_coords[::10], ee_z_coords[::10], label=f'Path to ({target_x:.2f}, {target_z:.2f})')
-        ax_ee_traj.plot(target_x, target_z, 'rx', markersize=10, mew=2) # Mark target points
+        
+    # --- Plot 13: Path Tracking Error over Time ---
+    for idx, (target_x, target_z) in enumerate(target_positions):
+        ax_error.plot(
+            time_log[::10], osc_all_error_logs[idx][::10],
+            label=f'Target ({target_x:.2f}, {target_z:.2f})'
+        )
+    ax_error.set_title('Path Tracking Error')
+    ax_error.set_xlabel("Time [s]")
+    ax_error.set_ylabel("Path Error [m]")
+    ax_error.grid(True)
+    ax_error.legend(loc='upper right', fontsize='x-small')
 
     plt.tight_layout(rect=[0, 0, 1, 0.98]) # Adjust layout to prevent overlapping titles/labels
     plt.savefig('experiment/results/combined_simulation_results.png', dpi=300, bbox_inches='tight') # Save the figure as a high-resolution PNG

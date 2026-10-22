@@ -35,6 +35,8 @@ def run_experiment(q_init: np.ndarray, target_positions: np.ndarray, robot_param
 
     if verbose:
         print(f"Number of OSC simulations: {len(target_positions)}")
+        simulation_time = sim_params.dt * sim_params.num_steps
+        print(f"Simulation time: {simulation_time:.2f} s")
 
     # Run simulation for each target position
     for idx, (target_x, target_z) in enumerate(target_positions):
@@ -49,7 +51,7 @@ def run_experiment(q_init: np.ndarray, target_positions: np.ndarray, robot_param
         simulation_logs.append(sim_log)
         simulation_metrics.append(simulation_metric)
         
-        print(f"Simulation {idx + 1}/{len(target_positions)}: RMSE = {simulation_metric.rmse:.4f}")
+        print(f"Simulation {idx + 1}/{len(target_positions)}: RMSE = {simulation_metric.rmse:.6f}")
         
     if verbose:
         print("Simulation completed for all target positions.")
@@ -95,7 +97,7 @@ def main(use_viewer = True, generate_plot=True, generate_gif=True):
     q_init = np.array([np.pi*5/12, np.pi * (1 - 10/12)])
     
     # Generate a uniform grid of target positions
-    target_positions = uniform_grid(2.0, 0.8)
+    target_positions = uniform_grid(2.0, 0.6)
 
     if use_viewer:
         print("Running simulation with viewer...")

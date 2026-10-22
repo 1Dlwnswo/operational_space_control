@@ -39,19 +39,16 @@ class LinePath:
         projected_point = self.start_point + projection_length_clamped * self.unit_direction
 
         dist = self.length - projection_length_clamped
-        brake_distance = max((self.cruise_speed**2)/(2*max_acceleration),0.05)
-
-        # Adjust brake_distance if the segment is very short
-        if self.length < brake_distance:
-            brake_distance = 0.5 * self.length
-
+        brake_distance = np.linalg.norm(current_velocity)**2/ (2*max_acceleration)
+        
         speed_along_path = np.dot(current_velocity, self.unit_direction)
+        
         at_endpoint = dist <= 1e-2
         stopped = abs(speed_along_path) <= 1e-2
         
         if self.stop_at_end and at_endpoint and stopped:
             candidate_state = 3
-        elif self.stop_at_end and dist <= brake_distance:
+        elif self.stop_at_end and dist < brake_distance:
             candidate_state = 2
         else:
             if speed_along_path < self.cruise_speed - 1e-2:
