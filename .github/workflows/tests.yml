@@ -26,4 +26,4 @@ jobs:
         run: uv sync --locked
 
       - name: Run tests
-        run: uv run --locked pytest
+        run: uv run --locked pytest && echo "All tests passed successfully!"
