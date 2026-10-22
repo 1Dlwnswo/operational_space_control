@@ -43,12 +43,3 @@ class SimulationResult:
     xdot: Optional[np.ndarray] = None
     xddot: Optional[np.ndarray] = None
     
-"""
-fucking 개버그를 발견했어요. 현재 
-experiment <= run_simulation <= perform_simulation_step
-으로 시뮬레이션 로그를 넘기는데 이때, perform_simulation_step에서 SimulationResults로 데이터를 넘겨요.
-근데 fucking run_simulation에서 이걸 리스트에 쳐 담에세 experiment로 보내서 여기서 또 염병을 하는 상황
-
-아 아니네
-ㅈㅅ
-"""
