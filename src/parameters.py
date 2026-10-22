@@ -42,4 +42,3 @@ class SimulationResult:
     x: Optional[np.ndarray] = None
     xdot: Optional[np.ndarray] = None
     xddot: Optional[np.ndarray] = None
-    
