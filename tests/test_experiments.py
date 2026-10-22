@@ -58,7 +58,7 @@ def test_line_path_experiment_runs_for_one_target(monkeypatch):
     start = get_end_effector_position(q_init[0], q_init[1], 1.0, 1.0)
     target_positions = np.array([start + np.array([0.05, 0.05])])
 
-    logs, sim_params = line_experiment.run_experiment(
+    logs, simulation_metrics, sim_params = line_experiment.run_experiment(
         q_init,
         target_positions,
         cruise_speed=0.5,
@@ -67,6 +67,8 @@ def test_line_path_experiment_runs_for_one_target(monkeypatch):
     )
 
     assert len(logs) == 1
+    assert len(simulation_metrics) == 1
+    assert np.isfinite(simulation_metrics[0].rmse)
     _assert_operational_space_log(logs[0], SHORT_RUN_STEPS)
     assert sim_params.dt > 0
 
