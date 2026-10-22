@@ -4,7 +4,6 @@ from dataclasses import dataclass, field
 from src.parameters import RobotParameters, SimulationParameters
 from src.path.LinePath import LinePath
 from src.robot.arm_2dof.kinematics import get_jacobian
-from src.utils import get_ee_convergence_time
 
 @dataclass
 class metrics:
@@ -46,6 +45,20 @@ class metrics:
                 np.sqrt(max(0.0, np.linalg.det(jacobian @ jacobian.T)))
             )
         self.manipulability = np.asarray(manipulability)
+
+# Define convergence time function for end-effector position
+def get_ee_convergence_time(ee_x_log: np.ndarray, target_x: np.ndarray, dt: float, error_threshold = 0.01):
+
+    dist_errors = np.linalg.norm(np.array(ee_x_log) - target_x, axis=1)
+
+    last_exceeding_idx = -1
+    for i in range(len(dist_errors) - 1, -1, -1):
+        if dist_errors[i] >= error_threshold:
+            last_exceeding_idx = i
+            break
+
+    return (last_exceeding_idx + 1) * dt
+
 
 def calculate_linepath_rmse(x_log: np.ndarray, linepath_obj: LinePath):
     

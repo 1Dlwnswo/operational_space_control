@@ -1,6 +1,7 @@
 import numpy as np
+import pytest
 
-from src.utils import get_ee_convergence_time, wrap_to_pi
+from src.utils import create_experiment_dir, wrap_to_pi
 
 
 def test_wrap_to_pi_returns_angles_in_expected_interval():
@@ -11,19 +12,40 @@ def test_wrap_to_pi_returns_angles_in_expected_interval():
     np.testing.assert_allclose(wrapped, [-np.pi, -np.pi / 2, -np.pi])
 
 
-def test_convergence_time_is_after_last_sample_outside_threshold():
-    positions = np.array(
-        [[0.0, 0.0], [0.5, 0.0], [0.95, 0.0], [1.02, 0.0], [1.0, 0.0]]
-    )
+def test_create_experiment_dir_creates_timestamped_directory(tmp_path, monkeypatch):
+    class FixedDateTime:
+        @staticmethod
+        def now():
+            class FixedNow:
+                @staticmethod
+                def strftime(_format):
+                    return "2026-10-22_120000"
 
-    convergence_time = get_ee_convergence_time(
-        positions, target_x=np.array([1.0, 0.0]), dt=0.01, error_threshold=0.1
-    )
+            return FixedNow()
 
-    assert convergence_time == 0.02
+    monkeypatch.setattr("src.utils.datetime", FixedDateTime)
+
+    experiment_dir = create_experiment_dir("line", tmp_path)
+
+    assert experiment_dir == tmp_path / "line" / "2026-10-22_120000"
+    assert experiment_dir.is_dir()
 
 
-def test_convergence_time_is_zero_when_always_within_threshold():
-    positions = np.array([[1.0, 0.0], [1.005, 0.0]])
+def test_create_experiment_dir_raises_if_timestamped_directory_exists(
+    tmp_path, monkeypatch
+):
+    class FixedDateTime:
+        @staticmethod
+        def now():
+            class FixedNow:
+                @staticmethod
+                def strftime(_format):
+                    return "2026-10-22_120000"
 
-    assert get_ee_convergence_time(positions, np.array([1.0, 0.0]), 0.01) == 0.0
+            return FixedNow()
+
+    monkeypatch.setattr("src.utils.datetime", FixedDateTime)
+    create_experiment_dir("line", tmp_path)
+
+    with pytest.raises(FileExistsError):
+        create_experiment_dir("line", tmp_path)

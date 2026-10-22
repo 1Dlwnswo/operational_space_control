@@ -1,17 +1,12 @@
 import numpy as np
+from datetime import datetime
+from pathlib import Path
+
+def create_experiment_dir(experiment_name: str, results_root: Path) -> Path:
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H%M%S")
+    experiment_dir = results_root / experiment_name / timestamp
+    experiment_dir.mkdir(parents=True, exist_ok=False)
+    return experiment_dir
 
 def wrap_to_pi(angle):
     return (angle + np.pi) % (2 * np.pi) - np.pi # (-pi, pi]
-
-# Define convergence time function for end-effector position
-def get_ee_convergence_time(ee_x_log: np.ndarray, target_x: np.ndarray, dt, error_threshold = 0.01):
-
-    dist_errors = np.linalg.norm(np.array(ee_x_log) - target_x, axis=1)
-
-    last_exceeding_idx = -1
-    for i in range(len(dist_errors) - 1, -1, -1):
-        if dist_errors[i] >= error_threshold:
-            last_exceeding_idx = i
-            break
-
-    return (last_exceeding_idx + 1) * dt
