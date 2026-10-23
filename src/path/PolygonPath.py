@@ -61,7 +61,9 @@ class PolygonPath:
                 self.current_segment_idx += 1
         elif current_segment_path.at_endpoint:
             print(f"Segment {self.current_segment_idx} completed, moving to the next segment. stop_at_end: {current_segment_path.stop_at_end}")
-            self.current_segment_idx += 1                
+            self.current_segment_idx += 1
+            if self.current_segment_idx >= len(self._segments):
+                self.current_segment_idx = 0
 
         return x_des, x_des_dot, x_des_ddot
 

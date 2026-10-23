@@ -91,6 +91,7 @@ def plot_combined_results(simulation_log: list, simulation_metrics, q_init: np.n
     ax_torque.grid(True)
     ax_torque.legend()
 
+    # --- Plot 4: End-effector Trajectory ---
     center = circular_path_obj.center
     radius = circular_path_obj.radius
     theta = np.linspace(0.0, 2.0 * np.pi, 300)
@@ -113,6 +114,7 @@ def plot_combined_results(simulation_log: list, simulation_metrics, q_init: np.n
     ax_trajectory.grid(True)
     ax_trajectory.legend()
 
+    # --- Plot 5, 6: End-effector Sine Fitting ---
     def sine_function(t, amplitude, omega, phase, offset):
         return amplitude * np.sin(omega * t + phase) + offset
 
@@ -133,6 +135,17 @@ def plot_combined_results(simulation_log: list, simulation_metrics, q_init: np.n
                     "--",
                     label="Sine fit",
                 )
+                axis.text(
+                    0.98,
+                    0.98,
+                    f"{label}(t) = {parameters[0]:.3f} sin("
+                    f"{parameters[1]:.3f}t + {parameters[2]:.3f}) "
+                    f"+ {parameters[3]:.3f}",
+                    transform=axis.transAxes,
+                    ha="right",
+                    va="top",
+                    bbox={"facecolor": "white", "alpha": 0.8},
+                )
             except (RuntimeError, ValueError):
                 pass
         axis.set(
@@ -141,8 +154,10 @@ def plot_combined_results(simulation_log: list, simulation_metrics, q_init: np.n
             ylabel=f"{label} Position [m]",
         )
         axis.grid(True)
-        axis.legend()
+        axis.legend(loc='right', fontsize='x-small')
 
+
+    # --- Plot 7, 8: X, Z Frequency Spectrum ---    
     if log_length > 1:
         frequencies = fftfreq(log_length, sim_params.dt)[: log_length // 2]
         x_spectrum = 2.0 / log_length * np.abs(fft(x_log[:, 0])[: log_length // 2])
@@ -152,20 +167,44 @@ def plot_combined_results(simulation_log: list, simulation_metrics, q_init: np.n
             (ax_z_fft, z_spectrum, "Z"),
         ):
             axis.plot(frequencies, spectrum)
-            if spectrum.size:
-                peak_index = int(np.argmax(spectrum))
+            upper_frequency = frequencies[-1]
+            threshold = 0.005
+            peak_candidates = np.flatnonzero(
+                (frequencies > 0.0) & (spectrum >= threshold)
+            )
+            if peak_candidates.size:
+                peak_index = peak_candidates[
+                    np.argmax(spectrum[peak_candidates])
+                ]
+                above_after_peak = np.flatnonzero(
+                    spectrum[peak_index:] > threshold
+                )
+                if above_after_peak.size:
+                    last_above_index = peak_index + above_after_peak[-1]
+                    cutoff_index = min(last_above_index + 1, len(frequencies) - 1)
+                    upper_frequency = frequencies[cutoff_index]
                 axis.scatter(frequencies[peak_index], spectrum[peak_index], color="red")
+                axis.text(
+                    0.98,
+                    0.98,
+                    f"Peak frequency: {frequencies[peak_index]:.3f} Hz",
+                    transform=axis.transAxes,
+                    ha="right",
+                    va="top",
+                    bbox={"facecolor": "white", "alpha": 0.8},
+                )
             axis.set(
                 title=f"End-effector {label} Frequency Spectrum",
                 xlabel="Frequency [Hz]",
                 ylabel="Magnitude",
             )
             axis.grid(True)
-            axis.set_xlim(0.0, 10.0)
+            axis.set_xlim(0.0, upper_frequency)
     else:
         ax_x_fft.set_title("X Frequency Spectrum (requires multiple samples)")
         ax_z_fft.set_title("Z Frequency Spectrum (requires multiple samples)")
 
+    # --- Plot 9: End-effector Velocity ---
     speed = np.linalg.norm(xdot_log, axis=1)
     ax_velocity.plot(time_log[::10], xdot_log[::10, 0], label="X Velocity")
     ax_velocity.plot(time_log[::10], xdot_log[::10, 1], label="Z Velocity")
@@ -180,18 +219,21 @@ def plot_combined_results(simulation_log: list, simulation_metrics, q_init: np.n
     ax_velocity.grid(True)
     ax_velocity.legend(fontsize="small")
 
+    # --- Plot 10: Circle Path Tracking Error ---
     ax_error.plot(time_log[::10], error_log[::10], label="Signed radial error")
     ax_error.plot(time_log[::10], distance_error_log[::10], label="Distance error", alpha=0.75)
     ax_error.set(title="Circle Path Tracking Error", xlabel="Time [s]", ylabel="Error [m]")
     ax_error.grid(True)
     ax_error.legend(fontsize="small")
 
+    # --- Plot 11: Manipulability det(JJᵀ) ---
     ax_manipulability.plot(time_log[::10], manipulability_log[::10])
     ax_manipulability.set(
         title="Manipulability det(JJᵀ)", xlabel="Time [s]", ylabel="Manipulability"
     )
     ax_manipulability.grid(True)
 
+    # --- Plot 12: Acceleration Command ---
     a_cmd_magnitude = np.linalg.norm(
         a_cmd_log.reshape(log_length, -1), axis=1
     )
@@ -203,6 +245,7 @@ def plot_combined_results(simulation_log: list, simulation_metrics, q_init: np.n
     )
     ax_a_cmd.grid(True)
 
+    # --- Plot 13: EE Acceleration Magnitude ---
     ee_acceleration_magnitude = np.linalg.norm(
         xddot_log.reshape(log_length, -1), axis=1
     )
@@ -214,6 +257,7 @@ def plot_combined_results(simulation_log: list, simulation_metrics, q_init: np.n
     )
     ax_acceleration.grid(True)
 
+    # Placeholder for additional plots; add new plots here as needed.
     initial_ee_position = get_end_effector_position(
         q_init[0], q_init[1], robot_params.L1, robot_params.L2
     )

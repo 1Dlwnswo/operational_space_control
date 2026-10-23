@@ -44,7 +44,7 @@ def test_circle_path_experiment_runs(monkeypatch):
     q_init = np.array([np.pi * 5 / 12, np.pi * (1 - 10 / 12)])
     path = CirclePath(center=np.array([0.3, 0.0]), radius=0.7)
 
-    log, sim_params = circle_experiment.run_experiment(
+    log, simulation_metrics, sim_params = circle_experiment.run_experiment(
         q_init, path, max_acceleration=15.0, use_viewer=False
     )
 
