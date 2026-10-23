@@ -6,7 +6,7 @@ from src.mujoco_setup import MODEL_PATH, load_model_and_data, get_robot_paramete
 from src.robot.arm_2dof.kinematics import get_end_effector_position
 from src.path.LinePath import LinePath
 from src.metrics.metrics import metrics
-from src.utils import create_experiment_dir, save_log
+from src.utils import create_experiment_dir, save_log, save_metrics
 
 from simulation.run_simulation import run_simulation
 
@@ -54,9 +54,16 @@ def run_experiment(q_init: np.ndarray, target_positions: np.ndarray, robot_param
         
         if experiment_dir != None:
             log_dir = experiment_dir / "logs"
+            metrics_dir = experiment_dir / "metrics"
+            
             log_dir.mkdir(parents=True, exist_ok=True)
+            metrics_dir.mkdir(parents=True, exist_ok=True)
+            
             log_path = log_dir / f"log_{idx}.csv"
+            metrics_path = metrics_dir / f"metric_{idx}.csv"
+            
             save_log(log_path = log_path, simulation_log = sim_log, sim_params = sim_params)
+            save_metrics(metrics_path = metrics_path, simulation_metrics = simulation_metric, sim_params = sim_params)
             
         print(f"Simulation {idx + 1}/{len(target_positions)}: RMSE = {simulation_metric.rmse:.6f}")
         

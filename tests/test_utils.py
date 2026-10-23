@@ -1,14 +1,18 @@
+import csv
 import json
 import numpy as np
 import pytest
+from types import SimpleNamespace
 
 from src.parameters import ImpedanceControlParameters, SimulationParameters, SimulationResult
 from src.utils import (
     create_experiment_dir,
     read_config,
     read_log,
+    read_metrics,
     save_config,
     save_log,
+    save_metrics,
     wrap_to_pi,
 )
 
@@ -116,3 +120,47 @@ def test_save_config_and_read_config_round_trip(tmp_path):
             "max_torque": 1000,
         },
     }
+
+
+def test_save_metrics_and_read_metrics_round_trip(tmp_path):
+    sim_params = SimulationParameters(dt=0.01, num_steps=2)
+    simulation_metric = SimpleNamespace(
+        errors=np.array([0.1, 0.2]),
+        distance_errors=np.array([0.3, 0.4]),
+        manipulability=np.array([0.5, 0.6]),
+        rmse=0.15,
+        convergence_time=0.02,
+    )
+    metrics_path = tmp_path / "metrics.csv"
+
+    save_metrics(metrics_path, simulation_metric, sim_params)
+    save_metrics(metrics_path, simulation_metric, sim_params)
+
+    with metrics_path.open("r", newline="", encoding="utf-8") as f:
+        csv_rows = list(csv.reader(f))
+    assert csv_rows[:5] == [
+        ["rmse", "0.15"],
+        ["convergence_time", "0.02"],
+        ["time", "errors", "distance_errors", "manipulability"],
+        ["0.0", "0.1", "0.3", "0.5"],
+        ["0.01", "0.2", "0.4", "0.6"],
+    ]
+
+    assert read_metrics(metrics_path) == [
+        {
+            "rmse": 0.15,
+            "convergence_time": 0.02,
+            "time": [0.0, 0.01],
+            "errors": [0.1, 0.2],
+            "distance_errors": [0.3, 0.4],
+            "manipulability": [0.5, 0.6],
+        },
+        {
+            "rmse": 0.15,
+            "convergence_time": 0.02,
+            "time": [0.0, 0.01],
+            "errors": [0.1, 0.2],
+            "distance_errors": [0.3, 0.4],
+            "manipulability": [0.5, 0.6],
+        },
+    ]

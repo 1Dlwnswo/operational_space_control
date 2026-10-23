@@ -49,6 +49,70 @@ def read_log(log_path: Path) -> List[Dict[str, Optional[float]]]:
         ]
 
 
+def save_metrics(metrics_path: Path, simulation_metrics: list, sim_params: SimulationParameters) -> Path:
+    metric = simulation_metrics
+    write_header = not metrics_path.exists() or metrics_path.stat().st_size == 0
+    rows = [
+        [
+            step * sim_params.dt,
+            error,
+            metric.distance_errors[step],
+            metric.manipulability[step],
+        ]
+        for step, error in enumerate(metric.errors)
+    ]
+
+    with metrics_path.open("a", newline="", encoding="utf-8") as f:
+        writer = csv.writer(f)
+        if not write_header:
+            writer.writerow([])
+        writer.writerow(["rmse", metric.rmse])
+        writer.writerow(["convergence_time", metric.convergence_time])
+        writer.writerow(["time", "errors", "distance_errors", "manipulability"])
+        writer.writerows(rows)
+
+    return metrics_path
+
+
+def read_metrics(metrics_path: Path) -> List[Dict[str, object]]:
+    with metrics_path.open("r", newline="", encoding="utf-8") as f:
+        rows = list(csv.reader(f))
+
+    simulations = []
+    row_index = 0
+    while row_index < len(rows):
+        if not rows[row_index]:
+            row_index += 1
+            continue
+
+        metric = {"rmse": float(rows[row_index][1])}
+        row_index += 1
+        metric["convergence_time"] = float(rows[row_index][1])
+        row_index += 1
+        row_index += 1  # Skip the time-series column header.
+
+        times = []
+        errors = []
+        distance_errors = []
+        manipulability = []
+        while row_index < len(rows) and rows[row_index]:
+            times.append(float(rows[row_index][0]))
+            errors.append(float(rows[row_index][1]))
+            distance_errors.append(float(rows[row_index][2]))
+            manipulability.append(float(rows[row_index][3]))
+            row_index += 1
+
+        metric.update({
+            "time": times,
+            "errors": errors,
+            "distance_errors": distance_errors,
+            "manipulability": manipulability,
+        })
+        simulations.append(metric)
+
+    return simulations
+
+
 def save_config(experiment_dir: Path, sim_params: SimulationParameters, control_params: ImpedanceControlParameters) -> Path:
     
     config = {
