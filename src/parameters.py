@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Optional
 import numpy as np
 
@@ -23,9 +23,17 @@ class SimulationParameters:
 
 @dataclass
 class ImpedanceControlParameters:
-    Kp: np.ndarray
-    Kd: np.ndarray
-    max_torque: float
+    max_acceleration: float
+    
+    Kp: np.ndarray = field(init = False)
+    Kd: np.ndarray = field(init = False)
+    
+    max_torque: float = 1000
+    
+    def __post_init__(self):
+        # Operational Space Parameters
+        self.Kp = (0.25 * self.max_acceleration**2) * np.eye(2)
+        self.Kd = self.max_acceleration * np.eye(2)        
 
 
 @dataclass

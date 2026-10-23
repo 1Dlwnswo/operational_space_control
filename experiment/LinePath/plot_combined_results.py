@@ -4,6 +4,7 @@ import numpy as np
 
 from src.parameters import RobotParameters, SimulationParameters
 from src.robot.arm_2dof.kinematics import get_end_effector_position
+from src.utils import create_experiment_dir
 
 # ============================================
 # Process simulation logs to extract relevant data for plotting
@@ -60,7 +61,8 @@ def process_simulation_logs(simulation_logs: list, simulation_metrics: list):
             osc_all_manipulability_logs)
 
 
-def plot_combined_results(simulation_logs: list, simulation_metrics: list, q_init: np.ndarray, target_positions: np.ndarray, sim_params: SimulationParameters, robot_params: RobotParameters):
+def plot_combined_results(simulation_logs: list, simulation_metrics: list, q_init: np.ndarray, target_positions: np.ndarray, 
+                          sim_params: SimulationParameters, robot_params: RobotParameters, experiment_dir = None):
     
     osc_all_q_logs, osc_all_torque_logs, osc_all_a_cmd_logs, \
         osc_all_x_logs, osc_all_xdot_logs, osc_all_xddot_logs, \
@@ -260,7 +262,10 @@ def plot_combined_results(simulation_logs: list, simulation_metrics: list, q_ini
     ax_error.legend(loc='upper right', fontsize='x-small')
 
     plt.tight_layout(rect=[0, 0, 1, 0.98]) # Adjust layout to prevent overlapping titles/labels
-    plt.savefig('experiment/results/combined_simulation_results.png', dpi=300, bbox_inches='tight') # Save the figure as a high-resolution PNG
+    
+    if experiment_dir != None:
+        figure_path = experiment_dir / "combined_simulation_results.png"
+        plt.savefig(figure_path, dpi=300, bbox_inches='tight') # Save the figure as a high-resolution PNG
     
     plt.show(block=False)
     plt.pause(5)

@@ -10,7 +10,7 @@ SIMULATIONS = {
     "3": ("Polygon Path", "experiment.PolygonPath.simulation"),
 }
 
-USE_VIEWER = True
+USE_VIEWER = False
 GENERATE_PLOT = True
 GENERATE_GIF = False
 

@@ -6,6 +6,7 @@ from src.mujoco_setup import MODEL_PATH, load_model_and_data, get_robot_paramete
 from src.robot.arm_2dof.kinematics import get_end_effector_position
 from src.path.LinePath import LinePath
 from src.metrics.metrics import metrics
+from src.utils import create_experiment_dir
 
 from simulation.run_simulation import run_simulation
 
@@ -18,7 +19,7 @@ from experiment.experiment_runner import run_experiment_cli
 # Run simulation for multiple target positions
 # ============================================
 def run_experiment(q_init: np.ndarray, target_positions: np.ndarray, robot_params: Optional[RobotParameters] = None, 
-                   cruise_speed = 2.0, max_acceleration = 10.0, verbose = False, use_viewer = False):
+                   cruise_speed = 2.0, max_acceleration = 10.0, verbose = False, use_viewer = False, experiment_dir = None):
     # Load the Mujoco model and data
     model, data = load_model_and_data(MODEL_PATH)
     
@@ -44,8 +45,8 @@ def run_experiment(q_init: np.ndarray, target_positions: np.ndarray, robot_param
         
         path_obj = LinePath(start_point=ee_start_pos, end_point=np.array([target_x, target_z]), cruise_speed=cruise_speed)
 
-        sim_log = run_simulation(model, data, q_init, "pw", sim_params, path_obj, 
-                                                max_acceleration = max_acceleration, save_operational_space = True, use_viewer = use_viewer)
+        sim_log = run_simulation(model, data, q_init, "pw", sim_params, path_obj, max_acceleration = max_acceleration, 
+                                 save_operational_space = True, use_viewer = use_viewer, experiment_dir = experiment_dir)
         simulation_metric = metrics(sim_log, sim_params, path_obj, robot_params)
         
         simulation_logs.append(sim_log)
@@ -97,20 +98,24 @@ def main(use_viewer = True, generate_plot=True, generate_gif=True):
     q_init = np.array([np.pi*5/12, np.pi * (1 - 10/12)])
     
     # Generate a uniform grid of target positions
-    target_positions = uniform_grid(2.0, 0.6)
+    target_positions = uniform_grid(2.0, 0.8)
 
     if use_viewer:
         print("Running simulation with viewer...")
     else:
         print("Running simulation without viewer...")
 
+    experiment_dir = create_experiment_dir("LinePath")
+    
     # Run simulations for all target positions
-    simulation_logs, simulation_metrics, sim_params = run_experiment(q_init, target_positions, cruise_speed=2.0, max_acceleration=10.0, verbose=True, use_viewer = use_viewer)
+    simulation_logs, simulation_metrics, sim_params = run_experiment(q_init, target_positions, cruise_speed=2.0, max_acceleration=10.0, 
+                                                                     verbose=True, use_viewer = use_viewer, experiment_dir = experiment_dir)
 
     # Plot results for all target positions
     if generate_plot:
         print("Generating plots...")
-        plot_combined_results(simulation_logs, simulation_metrics, q_init, target_positions, sim_params, get_robot_parameters(load_model_and_data(MODEL_PATH)[0]))
+        plot_combined_results(simulation_logs, simulation_metrics, q_init, target_positions, sim_params, 
+                              get_robot_parameters(load_model_and_data(MODEL_PATH)[0]), experiment_dir = experiment_dir)
 
     # Generate GIF for the full trajectory across all target positions
     if generate_gif:
