@@ -8,7 +8,9 @@ class LinePath:
     end_point: np.ndarray      # [x, z] numpy array
     cruise_speed: float = 1.0  # Constant desired speed along the path
     stop_at_end: bool = True   # New parameter to control deceleration
-
+    endpoint_threshold: dict = field(default_factory=lambda: {"position": 1e-2, "velocity": 1e-2})  # Thresholds for considering the endpoint reached
+    at_endpoint: bool = False
+    
     state: int = field(init=False)
     direction: np.ndarray = field(init=False)
     length: float = field(init=False)
@@ -43,10 +45,10 @@ class LinePath:
         
         speed_along_path = np.dot(current_velocity, self.unit_direction)
         
-        at_endpoint = dist <= 1e-2
-        stopped = abs(speed_along_path) <= 1e-2
+        self.at_endpoint = dist <= self.endpoint_threshold["position"]
+        stopped = abs(speed_along_path) <= self.endpoint_threshold["velocity"]
         
-        if self.stop_at_end and at_endpoint and stopped:
+        if self.stop_at_end and self.at_endpoint and stopped:
             candidate_state = 3
         elif self.stop_at_end and dist < brake_distance:
             candidate_state = 2

@@ -4,7 +4,16 @@ import numpy as np
 from src.robot.arm_2dof.dynamics import calcuate_inertia_matrix, calculate_coriolis_centrifugal_torques, calculate_gravity_torques
 from src.robot.arm_2dof.kinematics import get_jacobian, get_J_dot
 
-def plot_polygonal_path_results(x_log, q_log, torque_log, polygon_path_obj, sim_params, robot_params):
+def plot_polygonal_path_results(
+    x_log,
+    q_log,
+    torque_log,
+    polygon_path_obj,
+    sim_params,
+    robot_params,
+    experiment_dir=None,
+    save_individual_figures=False,
+):
         
     x1_log = x_log[:, 0]
     x2_log = x_log[:, 1]
@@ -138,7 +147,7 @@ def plot_polygonal_path_results(x_log, q_log, torque_log, polygon_path_obj, sim_
 
     # Plot workspace boundary
     workspace_radius = robot_params.L1 + robot_params.L2
-    circle_osc = plt.Circle((0, 0), workspace_radius, color='gray', alpha=0.1, fill=True, linestyle='--', edgecolor='black')
+    circle_osc = plt.Circle((0, 0), workspace_radius, facecolor='gray', alpha=0.1, fill=True, linestyle='--', edgecolor='black')
     ax_traj.add_patch(circle_osc)
 
     ax_traj.set_title('End-effector Trajectory for Polygonal Path')
@@ -149,7 +158,41 @@ def plot_polygonal_path_results(x_log, q_log, torque_log, polygon_path_obj, sim_
     ax_traj.legend()
     
     plt.tight_layout(rect=[0, 0, 1, 0.98]) # Adjust layout to prevent overlapping titles/labels
-    plt.savefig('experiment/results/polygonal_path_simulation_results.png', dpi=300, bbox_inches='tight') # Save the figure as a high-resolution PNG
+    if experiment_dir is None:
+        fig_polygon_results.savefig(
+            'experiment/results/polygonal_path_simulation_results.png',
+            dpi=300,
+            bbox_inches='tight',
+        )
+    else:
+        figures_dir = experiment_dir / "figures"
+        figures_dir.mkdir(parents=True, exist_ok=True)
+        fig_polygon_results.savefig(
+            figures_dir / "combined_figures.png",
+            dpi=300,
+            bbox_inches='tight',
+        )
+
+        if save_individual_figures:
+            individual_figures = [
+                ("joint_angles.png", ax_q),
+                ("joint_torques.png", ax_torque),
+                ("ee_position.png", ax_ee),
+                ("ee_velocity_and_speed.png", ax_speed),
+                ("ee_trajectory.png", ax_traj),
+                ("ee_acceleration_magnitude.png", ax_accel),
+            ]
+            fig_polygon_results.canvas.draw()
+            renderer = fig_polygon_results.canvas.get_renderer()
+            for filename, ax in individual_figures:
+                bbox = ax.get_tightbbox(renderer).transformed(
+                    fig_polygon_results.dpi_scale_trans.inverted()
+                ).padded(0.1)
+                fig_polygon_results.savefig(
+                    figures_dir / filename,
+                    dpi=300,
+                    bbox_inches=bbox,
+                )
     
     plt.show(block=False)
     plt.pause(5)

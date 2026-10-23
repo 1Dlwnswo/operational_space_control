@@ -5,13 +5,14 @@ from typing import Union
 from src.parameters import RobotParameters, SimulationParameters
 from src.path.CirclePath import CirclePath
 from src.path.LinePath import LinePath
+from src.path.PolygonPath import PolygonPath
 from src.robot.arm_2dof.kinematics import get_jacobian
 
 @dataclass
 class metrics:
     simulation_logs: list
     sim_params: SimulationParameters
-    path_obj: Union[LinePath, CirclePath]
+    path_obj: Union[LinePath, CirclePath, PolygonPath]
     robot_params: RobotParameters
     
     rmse: float = field(init=False)
@@ -33,6 +34,12 @@ class metrics:
                 - self.path_obj.radius
             )
             self.distance_errors = np.abs(self.errors)
+            self.convergence_time = get_convergence_time_from_errors(
+                self.distance_errors, self.sim_params.dt
+            )
+        elif isinstance(self.path_obj, PolygonPath):
+            self.errors = self.path_obj.calculate_path_errors(x_log)
+            self.distance_errors = self.errors.copy()
             self.convergence_time = get_convergence_time_from_errors(
                 self.distance_errors, self.sim_params.dt
             )
