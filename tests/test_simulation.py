@@ -61,7 +61,7 @@ def test_single_simulation_step_applies_torque_and_advances_time():
     path = CirclePath(center=np.array([0.3, 0.0]), radius=0.5)
     robot_params = get_robot_parameters(model)
     control_params = ImpedanceControlParameters(
-        Kp=10.0 * np.eye(2), Kd=5.0 * np.eye(2), max_torque=100.0
+        max_acceleration=4.0, max_torque=100.0
     )
 
     result = perform_simulation_step(
@@ -85,7 +85,7 @@ def test_simulation_step_rejects_unknown_control_type():
     model, data = load_model_and_data(str(MODEL_PATH))
     robot_params = get_robot_parameters(model)
     control_params = ImpedanceControlParameters(
-        Kp=np.eye(2), Kd=np.eye(2), max_torque=100.0
+        max_acceleration=2.0, max_torque=100.0
     )
     path = CirclePath(center=np.zeros(2), radius=0.5)
 
