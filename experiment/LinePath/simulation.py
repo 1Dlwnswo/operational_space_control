@@ -37,7 +37,7 @@ def run_experiment(q_init: np.ndarray, target_positions: np.ndarray, robot_param
     if verbose:
         print(f"Number of OSC simulations: {len(target_positions)}")
         simulation_time = sim_params.dt * sim_params.num_steps
-        print(f"Simulation time: {simulation_time:.2f} s")
+        print(f"Simulation time: {simulation_time:.4f} s")
 
     # Run simulation for each target position
     for idx, (target_x, target_z) in enumerate(target_positions):

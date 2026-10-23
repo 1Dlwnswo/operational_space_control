@@ -31,7 +31,12 @@ def run_simulation(model, data, q_init: np.ndarray, control_type: str, sim_param
     impedance_control_params = ImpedanceControlParameters(max_acceleration)
     
     if experiment_dir != None:
-        save_simulation_config(experiment_dir = experiment_dir, sim_params = sim_params, control_params = impedance_control_params)
+        save_simulation_config(
+            experiment_dir=experiment_dir,
+            sim_params=sim_params,
+            control_params=impedance_control_params,
+            robot_params=robot_params,
+        )
 
     simulation_log = []
     

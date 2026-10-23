@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 from types import SimpleNamespace
 
-from src.parameters import ImpedanceControlParameters, SimulationParameters, SimulationResult
+from src.parameters import ImpedanceControlParameters, RobotParameters, SimulationParameters, SimulationResult
 from src.utils import (
     create_experiment_dir,
     read_config,
@@ -69,12 +69,20 @@ def test_create_experiment_dir_raises_if_timestamped_directory_exists(
 def test_save_config_writes_parameters_and_compact_matrices(tmp_path):
     sim_params = SimulationParameters(dt=0.001, num_steps=2600)
     control_params = ImpedanceControlParameters(max_acceleration=10.0)
+    robot_params = RobotParameters(
+        m1=1.0, m2=0.8, I1=0.1, I2=0.08, L1=1.0, L2=0.8,
+        c1=0.5, c2=0.4, g=9.81,
+    )
 
-    config_path = save_config(tmp_path, sim_params, control_params)
+    config_path = save_config(tmp_path, sim_params, control_params, robot_params)
     contents = config_path.read_text(encoding="utf-8")
     config = json.loads(contents)
 
     assert config["simulation_parameters"] == {"dt": 0.001, "num_steps": 2600}
+    assert config["robot_parameters"] == {
+        "m1": 1.0, "m2": 0.8, "I1": 0.1, "I2": 0.08,
+        "L1": 1.0, "L2": 0.8, "c1": 0.5, "c2": 0.4, "g": 9.81,
+    }
     assert config["impedance_control_parameters"]["Kp"] == [[25.0, 0.0], [0.0, 25.0]]
     assert config["impedance_control_parameters"]["Kd"] == [[10.0, 0.0], [0.0, 10.0]]
     assert '"Kp": [[25.0, 0.0], [0.0, 25.0]]' in contents
@@ -108,11 +116,19 @@ def test_save_log_and_read_log_round_trip(tmp_path):
 def test_save_config_and_read_config_round_trip(tmp_path):
     sim_params = SimulationParameters(dt=0.001, num_steps=2600)
     control_params = ImpedanceControlParameters(max_acceleration=10.0)
+    robot_params = RobotParameters(
+        m1=1.0, m2=0.8, I1=0.1, I2=0.08, L1=1.0, L2=0.8,
+        c1=0.5, c2=0.4, g=9.81,
+    )
 
-    config_path = save_config(tmp_path, sim_params, control_params)
+    config_path = save_config(tmp_path, sim_params, control_params, robot_params)
 
     assert read_config(config_path) == {
         "simulation_parameters": {"dt": 0.001, "num_steps": 2600},
+        "robot_parameters": {
+            "m1": 1.0, "m2": 0.8, "I1": 0.1, "I2": 0.08,
+            "L1": 1.0, "L2": 0.8, "c1": 0.5, "c2": 0.4, "g": 9.81,
+        },
         "impedance_control_parameters": {
             "max_acceleration": 10.0,
             "Kp": [[25.0, 0.0], [0.0, 25.0]],
@@ -139,8 +155,8 @@ def test_save_metrics_and_read_metrics_round_trip(tmp_path):
     with metrics_path.open("r", newline="", encoding="utf-8") as f:
         csv_rows = list(csv.reader(f))
     assert csv_rows[:5] == [
-        ["rmse", "0.15"],
-        ["convergence_time", "0.02"],
+        ["rmse", "0.15", "0", "0"],
+        ["convergence_time", "0.02", "0", "0"],
         ["time", "errors", "distance_errors", "manipulability"],
         ["0.0", "0.1", "0.3", "0.5"],
         ["0.01", "0.2", "0.4", "0.6"],

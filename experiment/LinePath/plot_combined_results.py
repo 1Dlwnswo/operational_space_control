@@ -62,7 +62,8 @@ def process_simulation_logs(simulation_logs: list, simulation_metrics: list):
 
 
 def plot_combined_results(simulation_logs: list, simulation_metrics: list, q_init: np.ndarray, target_positions: np.ndarray, 
-                          sim_params: SimulationParameters, robot_params: RobotParameters, experiment_dir = None):
+                          sim_params: SimulationParameters, robot_params: RobotParameters, experiment_dir = None,
+                          save_individual_figures: bool = False):
     
     osc_all_q_logs, osc_all_torque_logs, osc_all_a_cmd_logs, \
         osc_all_x_logs, osc_all_xdot_logs, osc_all_xddot_logs, \
@@ -264,8 +265,37 @@ def plot_combined_results(simulation_logs: list, simulation_metrics: list, q_ini
     plt.tight_layout(rect=[0, 0, 1, 0.98]) # Adjust layout to prevent overlapping titles/labels
     
     if experiment_dir != None:
-        figure_path = experiment_dir / "combined_simulation_results.png"
-        plt.savefig(figure_path, dpi=300, bbox_inches='tight') # Save the figure as a high-resolution PNG
+        figures_dir = experiment_dir / "figures"
+        figures_dir.mkdir(parents=True, exist_ok=True)
+        plt.savefig(figures_dir / "combined_figures.png", dpi=300, bbox_inches='tight')
+
+        if save_individual_figures:
+            individual_figures = [
+                ("joint_1_angle.png", ax_q1),
+                ("joint_2_angle.png", ax_q2),
+                ("joint_1_torque.png", ax_q1_torque),
+                ("joint_2_torque.png", ax_q2_torque),
+                ("acceleration_command.png", ax_a_cmd),
+                ("ee_acceleration_magnitude.png", ax_accel),
+                ("ee_speed.png", ax_ee_speed),
+                ("ee_distance_error.png", ax_dist),
+                ("ee_convergence_time.png", ax_conv),
+                ("manipulability.png", ax_manip),
+                ("average_ee_speed.png", ax_avg_speed),
+                ("ee_path.png", ax_ee_traj),
+                ("path_tracking_error.png", ax_error),
+            ]
+            fig.canvas.draw()
+            renderer = fig.canvas.get_renderer()
+            for filename, ax in individual_figures:
+                bbox = ax.get_tightbbox(renderer).transformed(
+                    fig.dpi_scale_trans.inverted()
+                ).padded(0.1)
+                fig.savefig(
+                    figures_dir / filename,
+                    dpi=300,
+                    bbox_inches=bbox,
+                )
     
     plt.show(block=False)
     plt.pause(5)

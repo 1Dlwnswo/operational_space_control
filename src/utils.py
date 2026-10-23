@@ -6,7 +6,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional
 
-from src.parameters import ImpedanceControlParameters, SimulationParameters
+from src.parameters import ImpedanceControlParameters, RobotParameters, SimulationParameters
 
 def save_log(log_path: Path, simulation_log: list, sim_params: SimulationParameters) -> Path:
     
@@ -66,8 +66,8 @@ def save_metrics(metrics_path: Path, simulation_metrics: list, sim_params: Simul
         writer = csv.writer(f)
         if not write_header:
             writer.writerow([])
-        writer.writerow(["rmse", metric.rmse])
-        writer.writerow(["convergence_time", metric.convergence_time])
+        writer.writerow(["rmse", metric.rmse, 0, 0])
+        writer.writerow(["convergence_time", metric.convergence_time, 0, 0])
         writer.writerow(["time", "errors", "distance_errors", "manipulability"])
         writer.writerows(rows)
 
@@ -113,10 +113,16 @@ def read_metrics(metrics_path: Path) -> List[Dict[str, object]]:
     return simulations
 
 
-def save_config(experiment_dir: Path, sim_params: SimulationParameters, control_params: ImpedanceControlParameters) -> Path:
+def save_config(
+    experiment_dir: Path,
+    sim_params: SimulationParameters,
+    control_params: ImpedanceControlParameters,
+    robot_params: RobotParameters,
+) -> Path:
     
     config = {
         "simulation_parameters": asdict(sim_params),
+        "robot_parameters": asdict(robot_params),
         "impedance_control_parameters": asdict(control_params),
     }
 
