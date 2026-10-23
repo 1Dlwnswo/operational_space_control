@@ -4,3 +4,4 @@ __pycache__/
 .venv/
 uv.txt
 experiment/LinePath/results/
+experiment/CirclePath/results/

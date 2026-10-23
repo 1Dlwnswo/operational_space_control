@@ -8,8 +8,17 @@ from scipy.fft import fft, fftfreq
 from scipy.signal import find_peaks
 
 
-def plot_circular_path_results(x_log, q_log, torque_log, circular_path_obj: CirclePath ,sim_params: SimulationParameters, robot_params: RobotParameters):
-    _, axes_circular = plt.subplots(3, 3, figsize=(18, 12))
+def plot_circular_path_results(
+    x_log,
+    q_log,
+    torque_log,
+    circular_path_obj: CirclePath,
+    sim_params: SimulationParameters,
+    robot_params: RobotParameters,
+    experiment_dir=None,
+    save_individual_figures=False,
+):
+    fig, axes_circular = plt.subplots(3, 3, figsize=(18, 12))
     
     ee_x_log_circular = x_log[:, 0]
     ee_z_log_circular = x_log[:, 1]
@@ -64,7 +73,7 @@ def plot_circular_path_results(x_log, q_log, torque_log, circular_path_obj: Circ
 
     # Plot workspace boundary
     workspace_radius = robot_params.L1 + robot_params.L2
-    circle_osc = plt.Circle((0, 0), workspace_radius, color='gray', alpha=0.1, fill=True, linestyle='--', edgecolor='black')
+    circle_osc = plt.Circle((0, 0), workspace_radius, facecolor='gray', alpha=0.1, fill=True, linestyle='--', edgecolor='black')
     axes_circular[1,0].add_patch(circle_osc)
 
     axes_circular[1,0].set_title('End-effector Trajectory for Circular Path')
@@ -209,9 +218,43 @@ def plot_circular_path_results(x_log, q_log, torque_log, circular_path_obj: Circ
     axes_circular[2,2].grid(True)
     axes_circular[2,2].legend()
     
-    plt.tight_layout()
-    plt.suptitle('Circular Path Tracking Simulation Results', y=1.02, fontsize=16)    
-    plt.savefig('experiment/results/circular_path_simulation_results.png', dpi=300, bbox_inches='tight') # Save the figure as a high-resolution PNG
+    fig.tight_layout()
+    fig.suptitle('Circular Path Tracking Simulation Results', y=1.02, fontsize=16)
+
+    if experiment_dir is None:
+        fig.savefig(
+            'experiment/results/circular_path_simulation_results.png',
+            dpi=300,
+            bbox_inches='tight',
+        )
+    else:
+        figures_dir = experiment_dir / "figures"
+        figures_dir.mkdir(parents=True, exist_ok=True)
+        fig.savefig(figures_dir / "combined_figures.png", dpi=300, bbox_inches='tight')
+
+        if save_individual_figures:
+            individual_figures = [
+                "ee_position.png",
+                "joint_angles.png",
+                "joint_torques.png",
+                "ee_trajectory.png",
+                "ee_x_sine_fit.png",
+                "ee_z_sine_fit.png",
+                "ee_x_frequency_spectrum.png",
+                "ee_z_frequency_spectrum.png",
+                "ee_velocity_and_speed.png",
+            ]
+            fig.canvas.draw()
+            renderer = fig.canvas.get_renderer()
+            for filename, ax in zip(individual_figures, axes_circular.flat):
+                bbox = ax.get_tightbbox(renderer).transformed(
+                    fig.dpi_scale_trans.inverted()
+                ).padded(0.1)
+                fig.savefig(
+                    figures_dir / filename,
+                    dpi=300,
+                    bbox_inches=bbox,
+                )
     
     plt.show(block=False)
     plt.pause(5)

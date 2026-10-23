@@ -3,6 +3,8 @@ import numpy as np
 from src.parameters import RobotParameters, SimulationParameters
 from src.mujoco_setup import MODEL_PATH, load_model_and_data, get_robot_parameters, get_simulation_parameters
 from src.path.CirclePath import CirclePath
+from src.metrics.metrics import metrics
+from src.utils import create_experiment_dir, save_log, save_metrics
 from simulation.run_simulation import run_simulation
 from experiment.gif_generation import generate_robot_arm_full_trajectory_gif
 from experiment.CirclePath.plot_combined_results import plot_circular_path_results
@@ -14,15 +16,27 @@ from experiment.experiment_runner import run_experiment_cli
 # Run Simulation for Circular Path Tracking
 # ============================================
 def run_experiment(q_init: np.ndarray, circular_path_obj: CirclePath, 
-                   max_acceleration = 10.0, verbose = True, use_viewer = False):
+                   max_acceleration = 10.0, verbose = True, use_viewer = False,
+                   experiment_dir = None):
     # Load the Mujoco model and data
     model, data = load_model_and_data(MODEL_PATH)
+    robot_params = get_robot_parameters(model)
     
     sim_params = get_simulation_parameters(model)
     sim_params.num_steps = int(20/sim_params.dt)
 
     simulation_log = run_simulation(model, data, q_init, "pw", sim_params, circular_path_obj, 
-                                    max_acceleration = max_acceleration, save_operational_space = True, use_viewer = use_viewer)
+                                    max_acceleration = max_acceleration, save_operational_space = True,
+                                    use_viewer = use_viewer, experiment_dir = experiment_dir)
+
+    if experiment_dir is not None:
+        simulation_metrics = metrics(simulation_log, sim_params, circular_path_obj, robot_params)
+        log_dir = experiment_dir / "logs"
+        metrics_dir = experiment_dir / "metrics"
+        log_dir.mkdir(parents=True, exist_ok=True)
+        metrics_dir.mkdir(parents=True, exist_ok=True)
+        save_log(log_dir / "log_0.csv", simulation_log, sim_params)
+        save_metrics(metrics_dir / "metric_0.csv", simulation_metrics, sim_params)
     
     if verbose:
         print("Circular Path Tracking simulation complete.\n")
@@ -33,7 +47,14 @@ def run_experiment(q_init: np.ndarray, circular_path_obj: CirclePath,
 # ============================================
 # Plot Results for Circular Path Tracking
 # ============================================
-def plot_results(simulation_log: list, sim_params: SimulationParameters, circular_path_obj: CirclePath, robot_params: RobotParameters):
+def plot_results(
+    simulation_log: list,
+    sim_params: SimulationParameters,
+    circular_path_obj: CirclePath,
+    robot_params: RobotParameters,
+    experiment_dir=None,
+    save_individual_figures=False,
+):
     
     # Extract logs for joint angles, torques, and end-effector positions
     x_log = np.array([sim_result.x for sim_result in simulation_log])
@@ -41,7 +62,11 @@ def plot_results(simulation_log: list, sim_params: SimulationParameters, circula
     torque_log = np.array([sim_result.tau for sim_result in simulation_log])
     
     # Plot combined results for all target positions
-    plot_circular_path_results(x_log, q_log, torque_log, circular_path_obj, sim_params, robot_params)
+    plot_circular_path_results(
+        x_log, q_log, torque_log, circular_path_obj, sim_params, robot_params,
+        experiment_dir=experiment_dir,
+        save_individual_figures=save_individual_figures,
+    )
 
 
 # ============================================
@@ -90,7 +115,11 @@ def main(use_viewer = True, generate_plot = True, generate_gif = True):
         print("Running simulation without viewer...")
     
     # Run the simulation for circular path tracking
-    simulation_log, sim_params = run_experiment(q_init, circular_path_obj, max_acceleration = max_acceleration, use_viewer = use_viewer)
+    experiment_dir = create_experiment_dir("CirclePath")
+    simulation_log, sim_params = run_experiment(
+        q_init, circular_path_obj, max_acceleration=max_acceleration,
+        use_viewer=use_viewer, experiment_dir=experiment_dir,
+    )
     
     # Create RobotParameters object for plotting and GIF generation
     RobotParameters_obj = get_robot_parameters(load_model_and_data(MODEL_PATH)[0])
@@ -98,7 +127,10 @@ def main(use_viewer = True, generate_plot = True, generate_gif = True):
     # Plot results for circular path tracking
     if generate_plot:
         print("Generating plots...")
-        plot_results(simulation_log, sim_params, circular_path_obj, RobotParameters_obj)
+        plot_results(
+            simulation_log, sim_params, circular_path_obj, RobotParameters_obj,
+            experiment_dir=experiment_dir,
+        )
     
     # Generate GIF for circular path tracking
     if generate_gif:

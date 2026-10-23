@@ -1,7 +1,9 @@
 import numpy as np
 from dataclasses import dataclass, field
+from typing import Union
 
 from src.parameters import RobotParameters, SimulationParameters
+from src.path.CirclePath import CirclePath
 from src.path.LinePath import LinePath
 from src.robot.arm_2dof.kinematics import get_jacobian
 
@@ -9,7 +11,7 @@ from src.robot.arm_2dof.kinematics import get_jacobian
 class metrics:
     simulation_logs: list
     sim_params: SimulationParameters
-    path_obj: LinePath
+    path_obj: Union[LinePath, CirclePath]
     robot_params: RobotParameters
     
     rmse: float = field(init=False)
@@ -25,16 +27,25 @@ class metrics:
         x_log = np.asarray([result.x for result in self.simulation_logs], dtype=float)
         q_log = np.asarray([result.q for result in self.simulation_logs], dtype=float)
 
-        self.errors = self.path_obj.calculate_path_errors(x_log)
+        if isinstance(self.path_obj, CirclePath):
+            self.errors = (
+                np.linalg.norm(x_log - self.path_obj.center, axis=1)
+                - self.path_obj.radius
+            )
+            self.distance_errors = np.abs(self.errors)
+            self.convergence_time = get_convergence_time_from_errors(
+                self.distance_errors, self.sim_params.dt
+            )
+        else:
+            self.errors = self.path_obj.calculate_path_errors(x_log)
+            self.distance_errors = np.linalg.norm(
+                x_log - self.path_obj.end_point, axis=1
+            )
+            self.convergence_time = get_ee_convergence_time(
+                x_log, self.path_obj.end_point, self.sim_params.dt
+            )
+
         self.rmse = float(np.sqrt(np.mean(self.errors**2)))
-        
-        self.distance_errors = np.linalg.norm(
-            x_log - self.path_obj.end_point, axis=1
-        )
-        
-        self.convergence_time = get_ee_convergence_time(
-            x_log, self.path_obj.end_point, self.sim_params.dt
-        )
 
         manipulability = []
         for q in q_log:
@@ -50,10 +61,14 @@ class metrics:
 def get_ee_convergence_time(ee_x_log: np.ndarray, target_x: np.ndarray, dt: float, error_threshold = 0.01):
 
     dist_errors = np.linalg.norm(np.array(ee_x_log) - target_x, axis=1)
+    return get_convergence_time_from_errors(dist_errors, dt, error_threshold)
+
+
+def get_convergence_time_from_errors(errors: np.ndarray, dt: float, error_threshold = 0.01):
 
     last_exceeding_idx = -1
-    for i in range(len(dist_errors) - 1, -1, -1):
-        if dist_errors[i] >= error_threshold:
+    for i in range(len(errors) - 1, -1, -1):
+        if errors[i] >= error_threshold:
             last_exceeding_idx = i
             break
 
