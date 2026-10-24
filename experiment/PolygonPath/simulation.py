@@ -11,7 +11,7 @@ from src.utils import create_experiment_dir, save_log, save_metrics
 from simulation.run_simulation import run_simulation
 from experiment.gif_generation import generate_robot_arm_full_trajectory_gif
 from experiment.experiment_runner import run_experiment_cli
-from experiment.PolygonPath.plot_combined_results import plot_polygonal_path_results
+from experiment.PolygonPath.plot_combined_results import plot_combined_results
 
 def star(r, n=5):
     polygon_verticies = []
@@ -66,31 +66,6 @@ def run_experiment(q_init: np.ndarray, polygon_path_obj: PolygonPath, robot_para
 
 
 # ============================================
-# Plot Results for Polygonal Path Following
-# ============================================
-def plot_results(
-    simulation_log: list,
-    sim_params: SimulationParameters,
-    polygon_path_obj: PolygonPath,
-    robot_params: RobotParameters,
-    experiment_dir=None,
-    save_individual_figures=False,
-):
-    
-    # Extract logs for joint angles, torques, and end-effector positions
-    x_log = np.array([sim_result.x for sim_result in simulation_log])
-    q_log = np.array([sim_result.q for sim_result in simulation_log])
-    torque_log = np.array([sim_result.tau for sim_result in simulation_log])
-    
-    # Plot combined results for polygonal path following
-    plot_polygonal_path_results(
-        x_log, q_log, torque_log, polygon_path_obj, sim_params, robot_params,
-        experiment_dir=experiment_dir,
-        save_individual_figures=save_individual_figures,
-    )
-
-
-# ============================================
 # Generate GIF for Polygonal Path Following
 # ============================================
 def generate_GIF(simulation_log: list, sim_params: SimulationParameters, polygon_path_obj: PolygonPath, robot_params: RobotParameters):
@@ -142,12 +117,12 @@ def main(use_viewer = True, generate_plot = True, generate_gif = True):
     q_init = inverse_kinematics(polygon_vertices[0], 1.0, 1.0, polygon_vertices[0])
 
     # Define desired speed and maximum acceleration for the polygonal path
-    desired_speed = 3.0
+    desired_speed = 2.0
     max_acceleration = 10.0
 
     # Create a PolygonalPath object
     polygon_path_obj = PolygonPath(vertices = polygon_vertices, desired_speed = desired_speed, 
-                                   stop_at_vertices = True, stop_at_end = True)
+                                   stop_at_vertices = True, stop_at_end = False)
 
     print(f"\nPolygonal Path Parameters: Vertices=\n{polygon_path_obj.vertices}")
     
@@ -170,8 +145,16 @@ def main(use_viewer = True, generate_plot = True, generate_gif = True):
     # Plot results for polygonal path following
     if generate_plot:
         print("Generating plots...")
-        plot_results(
-            simulation_log, sim_params, polygon_path_obj, RobotParameters_obj,
+        simulation_metrics = metrics(
+            simulation_log, sim_params, polygon_path_obj, RobotParameters_obj
+        )
+        plot_combined_results(
+            simulation_log=simulation_log,
+            simulation_metrics=simulation_metrics,
+            q_init=q_init,
+            polygon_path_obj=polygon_path_obj,
+            sim_params=sim_params,
+            robot_params=RobotParameters_obj,
             experiment_dir=experiment_dir,
         )
     
