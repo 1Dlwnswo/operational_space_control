@@ -1,32 +1,54 @@
 import numpy as np
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Union
 
-from src.parameters import RobotParameters, SimulationParameters
+from src.parameters import (
+    ImpedanceControlParameters,
+    RobotParameters,
+    SimulationParameters,
+)
 from src.path.CirclePath import CirclePath
 from src.path.LinePath import LinePath
 from src.path.PolygonPath import PolygonPath
 from src.robot.arm_2dof.kinematics import get_jacobian
+from src.utils import read_config
 
 @dataclass
 class metrics:
     simulation_logs: list
-    sim_params: SimulationParameters
     path_obj: Union[LinePath, CirclePath, PolygonPath]
-    robot_params: RobotParameters
+    experiment_dir: Path
+
+    sim_params: SimulationParameters = field(init=False)
+    robot_params: RobotParameters = field(init=False)
+    control_params: ImpedanceControlParameters = field(init=False)
     
     rmse: float = field(init=False)
     errors: np.ndarray = field(init=False)
     distance_errors: np.ndarray = field(init=False)
     convergence_time: float = field(init=False)
     manipulability: np.ndarray = field(init=False)
+    saturation_torque_ratio: float = field(init=False)
 
     def __post_init__(self):
         if not self.simulation_logs:
             raise ValueError("simulation_logs must contain at least one result.")
+        if self.experiment_dir is None:
+            raise ValueError("experiment_dir is required to load experiment parameters.")
+
+        config = read_config(Path(self.experiment_dir) / "config.json")
+        self.sim_params = SimulationParameters(**config["simulation_parameters"])
+        self.robot_params = RobotParameters(**config["robot_parameters"])
+        control_config = config["impedance_control_parameters"]
+        self.control_params = ImpedanceControlParameters(
+            max_acceleration=control_config["max_acceleration"],
+            max_torque=control_config["max_torque"],
+        )
 
         x_log = np.asarray([result.x for result in self.simulation_logs], dtype=float)
         q_log = np.asarray([result.q for result in self.simulation_logs], dtype=float)
+        torque_log = np.asarray([result.tau for result in self.simulation_logs], dtype=float)
 
         if isinstance(self.path_obj, CirclePath):
             self.errors = (
@@ -63,6 +85,11 @@ class metrics:
                 np.sqrt(max(0.0, np.linalg.det(jacobian @ jacobian.T)))
             )
         self.manipulability = np.asarray(manipulability)
+
+        saturated_steps = np.any(
+            np.isclose(np.abs(torque_log), self.control_params.max_torque), axis=1
+        )
+        self.saturation_torque_ratio = float(np.mean(saturated_steps))
 
 # Define convergence time function for end-effector position
 def get_ee_convergence_time(ee_x_log: np.ndarray, target_x: np.ndarray, dt: float, error_threshold = 0.01):

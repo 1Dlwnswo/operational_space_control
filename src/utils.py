@@ -68,6 +68,9 @@ def save_metrics(metrics_path: Path, simulation_metrics: list, sim_params: Simul
             writer.writerow([])
         writer.writerow(["rmse", metric.rmse, 0, 0])
         writer.writerow(["convergence_time", metric.convergence_time, 0, 0])
+        writer.writerow([
+            "saturation_torque_ratio", metric.saturation_torque_ratio, 0, 0
+        ])
         writer.writerow(["time", "errors", "distance_errors", "manipulability"])
         writer.writerows(rows)
 
@@ -89,6 +92,13 @@ def read_metrics(metrics_path: Path) -> List[Dict[str, object]]:
         row_index += 1
         metric["convergence_time"] = float(rows[row_index][1])
         row_index += 1
+        if (
+            row_index < len(rows)
+            and rows[row_index]
+            and rows[row_index][0] == "saturation_torque_ratio"
+        ):
+            metric["saturation_torque_ratio"] = float(rows[row_index][1])
+            row_index += 1
         row_index += 1  # Skip the time-series column header.
 
         times = []

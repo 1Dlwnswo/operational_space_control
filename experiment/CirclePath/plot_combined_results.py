@@ -30,6 +30,7 @@ def process_simulation_log(simulation_log: list, simulation_metrics):
         np.asarray(simulation_metrics.distance_errors),
         float(simulation_metrics.rmse),
         float(simulation_metrics.convergence_time),
+        float(simulation_metrics.saturation_torque_ratio),
         np.asarray(simulation_metrics.manipulability),
     )
 
@@ -40,7 +41,7 @@ def plot_combined_results(simulation_log: list, simulation_metrics, q_init: np.n
     q_log, torque_log, a_cmd_log, \
         x_log, xdot_log, xddot_log, \
             error_log, distance_error_log, rmse, \
-                convergence_time, manipulability_log = process_simulation_log(simulation_log, simulation_metrics)
+                convergence_time, saturation_torque_ratio, manipulability_log = process_simulation_log(simulation_log, simulation_metrics)
 
     log_length = len(simulation_log)
     time_log = np.arange(log_length) * sim_params.dt
@@ -269,7 +270,8 @@ def plot_combined_results(simulation_log: list, simulation_metrics, q_init: np.n
         f"Path tracking RMSE: {rmse:.4f} m\n"
         f"EE convergence time (±0.01 m): {convergence_time:.3f} s\n"
         f"Initial EE position: ({initial_ee_position[0]:.3f}, "
-        f"{initial_ee_position[1]:.3f}) m",
+        f"{initial_ee_position[1]:.3f}) m\n"
+        f"Torque saturation: {saturation_torque_ratio:.1%}",
         va="top",
         transform=ax_summary.transAxes,
     )

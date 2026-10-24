@@ -24,6 +24,7 @@ def process_simulation_logs(simulation_logs: list, simulation_metrics: list):
     osc_all_dist_logs = []
     osc_ee_convergence_times = []
     osc_all_manipulability_logs = []
+    osc_all_saturation_torque_ratios = []
 
     for log, metrics in zip(simulation_logs, simulation_metrics):
         # Extract data from the simulation log
@@ -40,6 +41,7 @@ def process_simulation_logs(simulation_logs: list, simulation_metrics: list):
         dist_logs = metrics.distance_errors
         convergence_time = metrics.convergence_time
         manipulability_log = metrics.manipulability
+        saturation_torque_ratio = metrics.saturation_torque_ratio
         
         osc_all_q_logs.append(q_log)
         osc_all_torque_logs.append(torque_log)
@@ -53,12 +55,13 @@ def process_simulation_logs(simulation_logs: list, simulation_metrics: list):
         osc_all_dist_logs.append(dist_logs)
         osc_ee_convergence_times.append(convergence_time)
         osc_all_manipulability_logs.append(manipulability_log)
+        osc_all_saturation_torque_ratios.append(saturation_torque_ratio)
 
     return (osc_all_q_logs, osc_all_torque_logs, osc_all_a_cmd_logs,
             osc_all_x_logs, osc_all_xdot_logs, osc_all_xddot_logs,
             osc_all_error_logs, osc_all_rmse_log, 
             osc_all_dist_logs, osc_ee_convergence_times,
-            osc_all_manipulability_logs)
+            osc_all_manipulability_logs, osc_all_saturation_torque_ratios)
 
 
 def plot_combined_results(simulation_logs: list, simulation_metrics: list, q_init: np.ndarray, target_positions: np.ndarray, 
@@ -68,7 +71,8 @@ def plot_combined_results(simulation_logs: list, simulation_metrics: list, q_ini
     osc_all_q_logs, osc_all_torque_logs, osc_all_a_cmd_logs, \
         osc_all_x_logs, osc_all_xdot_logs, osc_all_xddot_logs, \
             osc_all_error_logs, osc_all_rmse_log, osc_all_dist_logs, \
-                osc_ee_convergence_times, osc_all_manipulability_logs = process_simulation_logs(simulation_logs, simulation_metrics)
+                osc_ee_convergence_times, osc_all_manipulability_logs, \
+                    osc_all_saturation_torque_ratios = process_simulation_logs(simulation_logs, simulation_metrics)
     
     # Regenerate time_log to match the current simulation steps
     time_log = [i * sim_params.dt for i in range(sim_params.num_steps)]
@@ -108,6 +112,7 @@ def plot_combined_results(simulation_logs: list, simulation_metrics: list, q_ini
 
     # Row 7: Path Tracking Error
     ax_error = fig.add_subplot(4, 4, 13)
+    ax_metric_summary = fig.add_subplot(4, 4, 14)
 
     # --- Plot 1: Joint 1 Angle over Time ---
     for idx, (target_x, target_z) in enumerate(target_positions):
@@ -262,6 +267,24 @@ def plot_combined_results(simulation_logs: list, simulation_metrics: list, q_ini
     ax_error.grid(True)
     ax_error.legend(loc='upper right', fontsize='x-small')
 
+    summary_lines = [
+        f"Initial EE position: ({initial_ee_pos[0]:.3f}, {initial_ee_pos[1]:.3f}) m"
+    ]
+    for idx, (target_x, target_z) in enumerate(target_positions):
+        summary_lines.extend((
+            f"Target ({target_x:.2f}, {target_z:.2f}): "
+            f"RMSE {osc_all_rmse_log[idx]:.4f} m, "
+            f"convergence {osc_ee_convergence_times[idx]:.3f} s",
+            f"  Torque saturation: {osc_all_saturation_torque_ratios[idx]:.1%}",
+        ))
+    ax_metric_summary.axis("off")
+    ax_metric_summary.set_title("Metric Summary")
+    ax_metric_summary.text(
+        0.03, 0.95, "\n".join(summary_lines),
+        va="top", transform=ax_metric_summary.transAxes,
+        fontsize="small",
+    )
+
     plt.tight_layout(rect=[0, 0, 1, 0.98]) # Adjust layout to prevent overlapping titles/labels
     
     if experiment_dir != None:
@@ -284,6 +307,7 @@ def plot_combined_results(simulation_logs: list, simulation_metrics: list, q_ini
                 ("average_ee_speed.png", ax_avg_speed),
                 ("ee_path.png", ax_ee_traj),
                 ("path_tracking_error.png", ax_error),
+                ("metric_summary.png", ax_metric_summary),
             ]
             fig.canvas.draw()
             renderer = fig.canvas.get_renderer()

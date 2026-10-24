@@ -28,7 +28,7 @@ class ImpedanceControlParameters:
     Kp: np.ndarray = field(init = False)
     Kd: np.ndarray = field(init = False)
     
-    max_torque: float = 1000
+    max_torque: float = 100
     
     def __post_init__(self):
         # Operational Space Parameters

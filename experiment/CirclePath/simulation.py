@@ -20,7 +20,6 @@ def run_experiment(q_init: np.ndarray, circular_path_obj: CirclePath,
                    experiment_dir = None):
     # Load the Mujoco model and data
     model, data = load_model_and_data(MODEL_PATH)
-    robot_params = get_robot_parameters(model)
     
     sim_params = get_simulation_parameters(model)
     sim_params.num_steps = int(20/sim_params.dt)
@@ -28,45 +27,25 @@ def run_experiment(q_init: np.ndarray, circular_path_obj: CirclePath,
     simulation_log = run_simulation(model, data, q_init, "pw", sim_params, circular_path_obj, 
                                     max_acceleration = max_acceleration, save_operational_space = True,
                                     use_viewer = use_viewer, experiment_dir = experiment_dir)
-    simulation_metrics = metrics(simulation_log, sim_params, circular_path_obj, robot_params)
-
+    
     if experiment_dir is not None:
+        simulation_metrics = metrics(simulation_log, circular_path_obj, experiment_dir)
+
         log_dir = experiment_dir / "logs"
         metrics_dir = experiment_dir / "metrics"
+        
         log_dir.mkdir(parents=True, exist_ok=True)
         metrics_dir.mkdir(parents=True, exist_ok=True)
+        
         save_log(log_dir / "log_0.csv", simulation_log, sim_params)
         save_metrics(metrics_dir / "metric_0.csv", simulation_metrics, sim_params)
+    else:
+        simulation_metrics = None
     
     if verbose:
         print("Circular Path Tracking simulation complete.\n")
     
     return simulation_log, simulation_metrics, sim_params
-
-'''
-# ============================================
-# Plot Results for Circular Path Tracking
-# ============================================
-def plot_results(
-    simulation_log: list,
-    sim_params: SimulationParameters,
-    circular_path_obj: CirclePath,
-    robot_params: RobotParameters,
-    experiment_dir=None,
-    save_individual_figures=False,
-):
-    
-    # Extract logs for joint angles, torques, and end-effector positions
-    x_log = np.array([sim_result.x for sim_result in simulation_log])
-    q_log = np.array([sim_result.q for sim_result in simulation_log])
-    torque_log = np.array([sim_result.tau for sim_result in simulation_log])
-    # Plot combined results for all target positions
-    plot_circular_path_results(
-        x_log, q_log, torque_log, circular_path_obj, sim_params, robot_params,
-        experiment_dir=experiment_dir,
-        save_individual_figures=save_individual_figures,
-    )
-'''
 
 # ============================================
 # Generate GIF for Circular Path Tracking

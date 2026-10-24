@@ -6,8 +6,14 @@ from src.metrics.metrics import (
     get_ee_convergence_time,
     metrics,
 )
-from src.parameters import RobotParameters, SimulationParameters, SimulationResult
+from src.parameters import (
+    ImpedanceControlParameters,
+    RobotParameters,
+    SimulationParameters,
+    SimulationResult,
+)
 from src.path.LinePath import LinePath
+from src.utils import save_config
 
 
 def test_convergence_time_is_after_last_sample_outside_threshold():
@@ -36,7 +42,7 @@ def test_calculate_linepath_rmse_uses_finite_segment_distance():
     assert calculate_linepath_rmse(positions, line) == pytest.approx(0.2)
 
 
-def test_metrics_computes_path_error_and_manipulability():
+def test_metrics_computes_path_error_and_manipulability(tmp_path):
     line = LinePath(np.array([0.0, 0.0]), np.array([1.0, 0.0]))
     robot = RobotParameters(
         m1=1.0, m2=1.0, I1=1.0, I2=1.0,
@@ -59,11 +65,18 @@ def test_metrics_computes_path_error_and_manipulability():
         ),
     ]
 
+    sim_params = SimulationParameters(dt=0.01, num_steps=2)
+    save_config(
+        tmp_path,
+        sim_params,
+        ImpedanceControlParameters(max_acceleration=10.0, max_torque=100.0),
+        robot,
+    )
+
     result = metrics(
         simulation_logs=logs,
-        sim_params=SimulationParameters(dt=0.01, num_steps=2),
         path_obj=line,
-        robot_params=robot,
+        experiment_dir=tmp_path,
     )
 
     assert result.rmse == pytest.approx(0.1)
@@ -71,16 +84,13 @@ def test_metrics_computes_path_error_and_manipulability():
     assert result.distance_errors.shape == (2,)
     assert result.convergence_time == pytest.approx(0.02)
     assert result.manipulability.shape == (2,)
+    assert result.saturation_torque_ratio == pytest.approx(0.0)
 
 
-def test_metrics_rejects_empty_simulation_logs():
+def test_metrics_rejects_empty_simulation_logs(tmp_path):
     with pytest.raises(ValueError, match="at least one result"):
         metrics(
             simulation_logs=[],
-            sim_params=SimulationParameters(dt=0.01, num_steps=0),
             path_obj=LinePath(np.zeros(2), np.ones(2)),
-            robot_params=RobotParameters(
-                m1=1.0, m2=1.0, I1=1.0, I2=1.0,
-                L1=1.0, L2=1.0, c1=0.5, c2=0.5, g=9.81,
-            ),
+            experiment_dir=tmp_path,
         )

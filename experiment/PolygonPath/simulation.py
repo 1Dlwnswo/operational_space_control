@@ -51,18 +51,23 @@ def run_experiment(q_init: np.ndarray, polygon_path_obj: PolygonPath, robot_para
                                     use_viewer=use_viewer, experiment_dir=experiment_dir)
 
     if experiment_dir is not None:
-        simulation_metrics = metrics(simulation_log, sim_params, polygon_path_obj, robot_params)
+        simulation_metrics = metrics(simulation_log, polygon_path_obj, experiment_dir)
+        
         log_dir = experiment_dir / "logs"
         metrics_dir = experiment_dir / "metrics"
+        
         log_dir.mkdir(parents=True, exist_ok=True)
         metrics_dir.mkdir(parents=True, exist_ok=True)
+        
         save_log(log_dir / "log_0.csv", simulation_log, sim_params)
         save_metrics(metrics_dir / "metric_0.csv", simulation_metrics, sim_params)
+    else:
+        simulation_metrics = None
     
     if verbose:
         print("Polygonal Path Following simulation complete.\n")
     
-    return simulation_log, sim_params
+    return simulation_log, simulation_metrics, sim_params
 
 
 # ============================================
@@ -134,7 +139,7 @@ def main(use_viewer = True, generate_plot = True, generate_gif = True):
     
     # Run the simulation for polygonal path following
     experiment_dir = create_experiment_dir("PolygonPath")
-    simulation_log, sim_params = run_experiment(
+    simulation_log, simulation_metrics, sim_params = run_experiment(
         q_init, polygon_path_obj, max_acceleration=max_acceleration,
         verbose=True, use_viewer=use_viewer, experiment_dir=experiment_dir,
     )
@@ -145,9 +150,6 @@ def main(use_viewer = True, generate_plot = True, generate_gif = True):
     # Plot results for polygonal path following
     if generate_plot:
         print("Generating plots...")
-        simulation_metrics = metrics(
-            simulation_log, sim_params, polygon_path_obj, RobotParameters_obj
-        )
         plot_combined_results(
             simulation_log=simulation_log,
             simulation_metrics=simulation_metrics,

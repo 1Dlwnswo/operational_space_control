@@ -133,7 +133,7 @@ def test_save_config_and_read_config_round_trip(tmp_path):
             "max_acceleration": 10.0,
             "Kp": [[25.0, 0.0], [0.0, 25.0]],
             "Kd": [[10.0, 0.0], [0.0, 10.0]],
-            "max_torque": 1000,
+            "max_torque": 100,
         },
     }
 
@@ -146,6 +146,7 @@ def test_save_metrics_and_read_metrics_round_trip(tmp_path):
         manipulability=np.array([0.5, 0.6]),
         rmse=0.15,
         convergence_time=0.02,
+        saturation_torque_ratio=0.25,
     )
     metrics_path = tmp_path / "metrics.csv"
 
@@ -154,9 +155,10 @@ def test_save_metrics_and_read_metrics_round_trip(tmp_path):
 
     with metrics_path.open("r", newline="", encoding="utf-8") as f:
         csv_rows = list(csv.reader(f))
-    assert csv_rows[:5] == [
+    assert csv_rows[:6] == [
         ["rmse", "0.15", "0", "0"],
         ["convergence_time", "0.02", "0", "0"],
+        ["saturation_torque_ratio", "0.25", "0", "0"],
         ["time", "errors", "distance_errors", "manipulability"],
         ["0.0", "0.1", "0.3", "0.5"],
         ["0.01", "0.2", "0.4", "0.6"],
@@ -166,6 +168,7 @@ def test_save_metrics_and_read_metrics_round_trip(tmp_path):
         {
             "rmse": 0.15,
             "convergence_time": 0.02,
+            "saturation_torque_ratio": 0.25,
             "time": [0.0, 0.01],
             "errors": [0.1, 0.2],
             "distance_errors": [0.3, 0.4],
@@ -174,6 +177,7 @@ def test_save_metrics_and_read_metrics_round_trip(tmp_path):
         {
             "rmse": 0.15,
             "convergence_time": 0.02,
+            "saturation_torque_ratio": 0.25,
             "time": [0.0, 0.01],
             "errors": [0.1, 0.2],
             "distance_errors": [0.3, 0.4],

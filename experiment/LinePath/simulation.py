@@ -47,12 +47,10 @@ def run_experiment(q_init: np.ndarray, target_positions: np.ndarray, robot_param
 
         sim_log = run_simulation(model, data, q_init, "pw", sim_params, path_obj, max_acceleration = max_acceleration, 
                                  save_operational_space = True, use_viewer = use_viewer, experiment_dir = experiment_dir)
-        simulation_metric = metrics(sim_log, sim_params, path_obj, robot_params)
         
-        simulation_logs.append(sim_log)
-        simulation_metrics.append(simulation_metric)
+        if experiment_dir is not None:
+            simulation_metric = metrics(sim_log, path_obj, experiment_dir)
         
-        if experiment_dir != None:
             log_dir = experiment_dir / "logs"
             metrics_dir = experiment_dir / "metrics"
             
@@ -64,7 +62,12 @@ def run_experiment(q_init: np.ndarray, target_positions: np.ndarray, robot_param
             
             save_log(log_path = log_path, simulation_log = sim_log, sim_params = sim_params)
             save_metrics(metrics_path = metrics_path, simulation_metrics = simulation_metric, sim_params = sim_params)
-            
+        else:
+            simulation_metric = None
+        
+        simulation_logs.append(sim_log)
+        simulation_metrics.append(simulation_metric)
+        
         print(f"Simulation {idx + 1}/{len(target_positions)}: RMSE = {simulation_metric.rmse:.6f}")
         
     if verbose:
