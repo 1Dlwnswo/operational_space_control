@@ -8,23 +8,17 @@ from src.path.LinePath import LinePath
 
 
 def test_path_following_returns_column_vector_and_respects_acceleration_limit():
-    params = ImpedanceControlParameters(
-        Kp=100.0 * np.eye(2), Kd=10.0 * np.eye(2), max_torque=20.0
-    )
+    params = ImpedanceControlParameters(max_acceleration=20.0, max_torque=20.0)
     path = LinePath(np.zeros(2), np.array([1.0, 1.0]), cruise_speed=0.0)
 
-    acceleration = path_following(
-        np.array([-1.0, -1.0]), np.zeros(2), path, params, max_acceleration=3.0
-    )
+    acceleration = path_following(np.array([-1.0, -1.0]), np.zeros(2), path, params, max_acceleration=3.0)
 
     assert acceleration.shape == (2, 1)
     np.testing.assert_allclose(np.linalg.norm(acceleration), 3.0)
 
 
 def test_impedance_control_returns_pd_acceleration_command():
-    params = ImpedanceControlParameters(
-        Kp=2.0 * np.eye(2), Kd=3.0 * np.eye(2), max_torque=20.0
-    )
+    params = ImpedanceControlParameters(max_acceleration=1.0 + np.sqrt(3.0), max_torque=20.0)
     path = LinePath(np.zeros(2), np.array([1.0, 2.0]))
 
     command = impedance_control(np.zeros(2), np.array([0.5, 1.0]), path, params)

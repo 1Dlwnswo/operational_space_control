@@ -1,165 +1,309 @@
-# Operational Space Control
+# Operational Space Control for a 2-DOF Manipulator
 
-A MuJoCo-based project for implementing Operational Space Control (OSC) on a 2-DOF robotic manipulator and investigating Cartesian path-tracking behavior through simulation.
+A Python and MuJoCo project for implementing **Operational Space Control
+(OSC)** and studying Cartesian path-following behavior in a planar
+two-link robotic arm.
 
-## Overview
+The project is being developed as an experimental control framework:
+begin with a model-based controller, establish reproducible baselines,
+and then investigate where model mismatch, actuator constraints, and
+kinematic singularities affect performance. Learning-based compensation
+is a possible later extension, not part of the current controller.
 
-The goal is to build and evaluate model-based controllers from first principles, using simulation to study manipulator trajectory tracking and controller limitations.
+## Goals
 
-Current areas of interest include:
+-   Implement the kinematics and dynamics used by a 2-DOF manipulator
+    controller.
+-   Track Cartesian line, circular, and polygonal paths in MuJoCo.
+-   Separate path/reference generation, control, simulation, and
+    evaluation code.
+-   Record simulation metrics and visualizations for repeatable
+    experiments.
+-   Investigate torque saturation, singularity handling, and robustness
+    to model mismatch, disturbances, and sensor noise.
+-   Eventually compare model-based control with learning-based methods
+    under clearly defined experimental conditions.
 
-- Cartesian-space path tracking
-- Operational Space Control
-- Trajectory and velocity-profile design
-- Interaction between torque commands and robot dynamics
-- Kinematic singularities and inverse-kinematics branch changes
-- Future robustness evaluation under model mismatch, external disturbances, and sensor noise
+## Current Scope
 
-The project is currently focused on developing the controller and simulation workflow. Quantitative tracking errors and comparative performance results have not yet been documented.
+The current project includes:
 
-## Environment
+-   A planar 2-DOF MuJoCo robot model.
+-   Forward-kinematics/Jacobian utilities and a separately implemented
+    manipulator dynamics model.
+-   An OSC torque calculation using operational-space inertia and
+    compensation terms.
+-   Cartesian acceleration-command generation for path following.
+-   Line, circle, and polygon path experiments.
+-   Simulation logging, metrics, plots, and optional GIF generation.
+-   Unit tests for core utilities, paths, control, metrics, simulation,
+    and experiment modules.
 
-- Python
-- MuJoCo
-- NumPy
-- Matplotlib
-- `uv` for Python environment and dependency management
+This is an actively developing research/learning project. The existence
+of a working simulation or a low path-error value under one
+configuration does **not** by itself establish robustness, stability
+guarantees, or superiority over another controller. Quantitative claims
+should be tied to documented settings and repeatable comparisons.
 
-Dependency versions are managed through `pyproject.toml` and `uv.lock`.
+## Repository Structure
 
-## Robot Model
-
-The current simulation uses a planar robotic arm with two revolute joints.
-
-- Physics engine: MuJoCo
-- Degrees of freedom: 2
-- Actuation: Joint motor torque
-- Gravity: `-9.81 m/s²`
-- Simulation timestep: `0.001 s`
-- End-effector workspace: X-Z plane
-
-The end-effector position is computed from the joint configuration. Link dimensions and physical parameters are defined by the MuJoCo model.
-
-## Experiments
-
-### Circular Path Tracking
-
-The CirclePath experiment tracks a circular reference path.
-
-Current progress:
-- CirclePath experiment module is configured.
-- The MuJoCo simulation runs successfully.
-- Plot and GIF generation can be controlled through command-line options.
-- Real-time MuJoCo viewer integration is being developed.
-
-```bash
-uv run python -m experiment.CirclePath.simulation --no-plot --no-gif
+``` text
+operational_space_control/
+├── model/
+│   └── arm_2dof.xml              # MuJoCo model
+├── src/
+│   ├── control/
+│   │   ├── osc.py                # OSC parameter and torque calculations
+│   │   ├── acceleration_command.py
+│   │   └── torque_limiter.py
+│   ├── robot/
+│   │   └── arm_2dof/
+│   │       ├── kinematics.py     # Forward kinematics, Jacobian, J-dot
+│   │       ├── dynamics.py       # Inertia, Coriolis/centrifugal, gravity terms
+│   │       └── sensors.py
+│   ├── path/
+│   │   ├── LinePath.py
+│   │   ├── CirclePath.py
+│   │   └── PolygonPath.py
+│   ├── metrics/
+│   │   └── metrics.py            # Path error, RMSE, convergence, manipulability
+│   ├── mujoco_setup.py
+│   ├── parameters.py
+│   └── utils.py                  # Shared simulation/experiment utilities
+├── simulation/
+│   ├── perform_simulation_step.py
+│   └── run_simulation.py
+├── experiment/
+│   ├── LinePath/
+│   │   ├── simulation.py
+│   │   └── plot_combined_results.py
+│   ├── CirclePath/
+│   │   ├── simulation.py
+│   │   └── plot_combined_results.py
+│   ├── PolygonPath/
+│   │   ├── simulation.py
+│   │   └── plot_combined_results.py
+│   ├── experiment_runner.py
+│   └── gif_generation.py
+├── tests/
+├── run.py                        # Interactive experiment selector
+├── pyproject.toml
+├── uv.lock
+└── TODO.md
 ```
 
-### Line Path Tracking
+Experiment outputs are written beneath the relevant
+`experiment/<PathName>/results/` directory, organized by run timestamp.
+Depending on the experiment and enabled outputs, a run may contain
+configuration data, metric CSV files, and figures. Some generated
+results are excluded from Git by `.gitignore`.
 
-An experiment module is available for tracking a straight-line reference path.
+## Controller Overview
 
-```bash
-uv run python -m experiment.LinePath.simulation --no-plot --no-gif
+The control pipeline is organized around the following flow:
+
+1.  The path object generates a desired Cartesian position, velocity,
+    and acceleration.
+2.  The acceleration-command module combines feedforward acceleration
+    with proportional and derivative feedback.
+3.  The OSC module uses the robot state and model parameters to
+    calculate an operational-space force and map it to joint torques.
+4.  The simulation applies the actuator commands in MuJoCo and records
+    the resulting state.
+5.  Metrics and plotting utilities analyze the recorded run.
+
+At a high level, the operational-space calculation follows the structure
+
+\[ `\Lambda `{=tex}= (J M\^{-1} J^T)^{-1}, \]
+
+\[ F = `\Lambda `{=tex}a\_{`\mathrm{cmd}`{=tex}} + `\mu `{=tex}+ p, \]
+
+\[ `\tau `{=tex}= J\^T F, \]
+
+where (M) is the joint-space inertia matrix, (J) is the end-effector
+Jacobian, (a\_{`\mathrm{cmd}`{=tex}}) is the commanded Cartesian
+acceleration, and (`\mu`{=tex}) and (p) represent implemented
+velocity-dependent and gravity compensation terms.
+
+The implementation includes numerical regularization in the
+operational-space inertia calculation. Its behavior near singular
+configurations must be evaluated experimentally; regularization alone
+should not be interpreted as a complete singularity-handling strategy.
+
+## Robot and Simulation
+
+The current MuJoCo model is a planar arm with two revolute joints and
+motor actuation. The model file is `model/arm_2dof.xml`; model geometry
+and actuator constraints are defined there. The simulation setup and
+controller parameters are maintained separately in `src/`.
+
+Important consistency checks for future experiments include:
+
+-   Matching the dynamics parameters used by the controller to the
+    MuJoCo model.
+-   Distinguishing computed torque commands from the control input
+    actually applied after actuator limits.
+-   Recording the exact initial state, path parameters, simulation
+    timestep, controller parameters, and actuator limits for each run.
+
+## Setup
+
+The project uses `uv` to manage the Python environment and locked
+dependencies.
+
+Install [uv](https://docs.astral.sh/uv/) if it is not already available,
+then run these commands from the repository root:
+
+``` bash
+uv sync
 ```
 
-### Polygon Path Tracking
+To run the test suite:
 
-An experiment module is available for tracking a polygonal reference path.
-
-```bash
-uv run python -m experiment.PolygonPath.simulation --no-plot --no-gif
+``` bash
+uv run pytest
 ```
 
-Tracking performance across these paths should be compared under consistent initial conditions and evaluation metrics.
-
-## Simulation and Visualization
-
-The simulation workflow separates execution from result visualization to make experiments easier to repeat.
-
-Implemented or in-progress features include:
-
-- MuJoCo physics simulation
-- Optional real-time viewer
-- Simulation-state logging
-- Plot generation
-- GIF generation
-- Viewer camera configuration
-- Custom world-coordinate-axis visualization
-
-Use `--no-plot --no-gif` when plots and GIFs are not needed.
-
-The `--viewer` flag must be registered in the relevant experiment module's command-line parser and passed to the simulation runner before it can be used. If it is not registered, the CLI will reject the option.
+The project dependencies and Python version requirement are declared in
+`pyproject.toml`; `uv.lock` records the resolved environment. A MuJoCo
+viewer requires a graphical environment. Headless runs should disable
+the viewer.
 
 ## Running Experiments
 
-Run commands from the project root:
+### Interactive selector
 
-```bash
-# Circular path
-uv run python -m experiment.CirclePath.simulation --no-plot --no-gif
+Run the menu in `run.py`:
 
-# Line path
-uv run python -m experiment.LinePath.simulation --no-plot --no-gif
-
-# Polygon path
-uv run python -m experiment.PolygonPath.simulation --no-plot --no-gif
+``` bash
+uv run python run.py
 ```
 
-If viewer support is enabled in the experiment module, launch the circular-path viewer with:
+The menu lets you select the circle, line, or polygon experiment. The
+default viewer/plot/GIF settings are configured near the top of
+`run.py`.
 
-```bash
+### Run one experiment directly
+
+Run commands from the repository root:
+
+``` bash
+# Circular path
+uv run python -m experiment.CirclePath.simulation --no-viewer --no-plot --no-gif
+
+# Straight-line path
+uv run python -m experiment.LinePath.simulation --no-viewer --no-plot --no-gif
+
+# Polygonal path
+uv run python -m experiment.PolygonPath.simulation --no-viewer --no-plot --no-gif
+```
+
+To enable the MuJoCo viewer, replace `--no-viewer` with `--viewer`. To
+generate plots or a GIF, replace `--no-plot` or `--no-gif` with `--plot`
+or `--gif`, respectively.
+
+For example, to run circular path tracking with the viewer but without
+generating plots or a GIF:
+
+``` bash
 uv run python -m experiment.CirclePath.simulation --viewer --no-plot --no-gif
 ```
 
-## Current Status
+The exact options accepted by each experiment are provided by the shared
+experiment CLI utility. Run commands from the repository root so that
+Python module imports and model paths resolve correctly.
 
-| Item | Status |
-|---|---|
-| 2-DOF MuJoCo model | Implemented |
-| CirclePath experiment | Runs successfully |
-| LinePath experiment module | Available |
-| PolygonPath experiment module | Available |
-| Plot/GIF CLI options | Available |
-| Real-time viewer integration | In progress / dependent on CLI integration |
-| Camera viewpoint configuration | Implemented in viewer configuration |
-| Custom coordinate axes | Visualization work in progress |
-| Quantitative tracking metrics | Not yet evaluated |
-| Torque saturation study | Planned |
-| Singularity-handling evaluation | Planned |
-| Robustness tests under model mismatch and disturbances | Planned |
+## Evaluation Metrics
 
-## Planned Work
+The current metrics module includes:
 
-### Quantitative trajectory-tracking evaluation
+-   **RMSE:** root-mean-square error for the error definition used by
+    the path type.
+-   **Distance error:** distance to the endpoint for line-path
+    evaluation, radial deviation for circle paths, or path deviation for
+    polygon paths.
+-   **Convergence time:** time associated with the last error sample
+    outside a specified threshold.
+-   **Manipulability:** a Jacobian-based measure derived from
+    (`\sqrt{\det(JJ^T)}`{=tex}).
 
-- Use consistent initial conditions and trajectory parameters.
-- Record Cartesian tracking error over time.
-- Compare RMS error, maximum error, and settling behavior.
-- Inspect joint positions, joint velocities, and actuator torques.
+Metric definitions depend on the path type. In particular, path
+deviation is not equivalent to time-indexed trajectory-tracking error.
+For rigorous comparisons, report the metric definition and units, and
+consider adding time-indexed position/velocity errors, maximum error,
+endpoint error, torque usage, and the fraction of time spent at actuator
+limits.
 
-### Controller robustness
+## Testing
 
-- Evaluate the effects of torque saturation.
-- Investigate behavior near kinematic singularities.
-- Introduce model-parameter mismatch and external disturbances.
-- Test sensitivity to measurement noise.
+Run all available tests with:
 
-### Model-based and learning-based methods
+``` bash
+uv run pytest
+```
 
-The long-term direction is to use a model-based controller as the primary control structure and investigate learning-based methods where they address specific limitations.
-
-Possible future directions include adaptive compensation and residual learning, evaluated against a clearly defined model-based baseline.
+The test suite is intended to check core calculations and
+simulation/experiment behavior. A passing test suite does not replace
+validation against MuJoCo's dynamics or controlled experiments near
+singularities and actuator limits.
 
 ## Research Questions
 
-1. Under what conditions does OSC fail to track a desired Cartesian trajectory?
-2. How do trajectory design and velocity/acceleration commands affect tracking?
-3. How should torque saturation and singular configurations be handled?
-4. How sensitive is the controller to model mismatch, disturbances, and measurement noise?
-5. Where can learning-based methods provide measurable benefits over a model-based baseline?
+The project is organized around these questions:
 
-## Results and Reproducibility
+1.  Under what conditions does OSC fail to track a Cartesian path or
+    trajectory?
+2.  How do path geometry and acceleration/velocity reference design
+    affect tracking?
+3.  How do torque limits change tracking performance and controller
+    behavior?
+4.  How does performance change near kinematic singularities?
+5.  How sensitive is the controller to errors in mass, inertia, or other
+    model parameters?
+6.  What changes when disturbances or sensor noise are introduced?
+7.  Can adaptive or learning-based residual compensation improve a
+    model-based baseline enough to justify its added complexity?
 
-A successful simulation run confirms that the experiment pipeline executes; it does not, by itself, demonstrate tracking accuracy or robustness. Quantitative claims should be added after collecting and analyzing metrics under reproducible conditions.
+## Planned Work
+
+Recommended order of work:
+
+1.  **Validate the implementation:** test torque-limiter behavior and
+    compare controller dynamics calculations against MuJoCo under
+    matched states and parameters.
+2.  **Establish a reproducible baseline:** standardize initial
+    conditions, path definitions, timestep, actuator constraints, and
+    metric definitions.
+3.  **Improve evaluation:** distinguish geometric path error from
+    time-indexed trajectory error; record torque saturation and endpoint
+    behavior.
+4.  **Study limitations:** vary model parameters, introduce
+    disturbances/noise, and test configurations with low manipulability.
+5.  **Compare controller designs:** change one factor at a time and
+    preserve configurations and outputs for each run.
+6.  **Explore learning-based compensation:** only after a clear
+    model-based baseline and measurable limitation have been
+    established.
+
+See [`TODO.md`](TODO.md) for current implementation tasks.
+
+## Reproducibility and Reporting
+
+For each experiment, preserve at least:
+
+-   Path type and all path parameters.
+-   Initial joint positions and velocities.
+-   Simulation timestep and duration.
+-   Controller gains and acceleration limits.
+-   Controller model parameters and MuJoCo model version.
+-   Actuator constraints.
+-   Metric definitions and output files.
+
+A plot or summary number should be accompanied by the configuration that
+produced it. When comparing methods, use the same test conditions and
+report both performance and constraint violations.
+
+## License
+
+No license has been specified yet. Add a license file before
+distributing or reusing the project as an open-source package.

@@ -3,3 +3,7 @@ __pycache__/
 .ipynb_checkpoints/
 .venv/
 uv.txt
+experiment/LinePath/results/
+experiment/CirclePath/results/
+experiment/PolygonPath/results/
+Makefile
