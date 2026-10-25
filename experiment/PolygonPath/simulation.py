@@ -5,7 +5,7 @@ from src.parameters import RobotParameters, SimulationParameters
 from src.mujoco_setup import MODEL_PATH, load_model_and_data, get_robot_parameters, get_simulation_parameters
 from src.path.PolygonPath import PolygonPath
 from src.robot.arm_2dof.kinematics import inverse_kinematics
-from src.metrics.metrics import metrics
+from src.metrics.metrics import SimulationMetrics
 from src.utils import create_experiment_dir, save_log, save_metrics
 
 from simulation.run_simulation import run_simulation
@@ -51,7 +51,7 @@ def run_experiment(q_init: np.ndarray, polygon_path_obj: PolygonPath, robot_para
                                     use_viewer=use_viewer, experiment_dir=experiment_dir)
 
     if experiment_dir is not None:
-        simulation_metrics = metrics(simulation_log, polygon_path_obj, experiment_dir)
+        simulation_metrics = SimulationMetrics(simulation_log, polygon_path_obj, experiment_dir)
         
         log_dir = experiment_dir / "logs"
         metrics_dir = experiment_dir / "metrics"

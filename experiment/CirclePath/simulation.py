@@ -3,7 +3,7 @@ import numpy as np
 from src.parameters import RobotParameters, SimulationParameters
 from src.mujoco_setup import MODEL_PATH, load_model_and_data, get_robot_parameters, get_simulation_parameters
 from src.path.CirclePath import CirclePath
-from src.metrics.metrics import metrics
+from src.metrics.metrics import SimulationMetrics
 from src.utils import create_experiment_dir, save_log, save_metrics
 
 from simulation.run_simulation import run_simulation
@@ -29,7 +29,7 @@ def run_experiment(q_init: np.ndarray, circular_path_obj: CirclePath,
                                     use_viewer = use_viewer, experiment_dir = experiment_dir)
     
     if experiment_dir is not None:
-        simulation_metrics = metrics(simulation_log, circular_path_obj, experiment_dir)
+        simulation_metrics = SimulationMetrics(simulation_log, circular_path_obj, experiment_dir)
 
         log_dir = experiment_dir / "logs"
         metrics_dir = experiment_dir / "metrics"

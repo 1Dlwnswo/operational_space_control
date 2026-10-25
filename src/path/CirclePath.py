@@ -35,3 +35,18 @@ class CirclePath:
         reference_acceleration = - self.cruise_angular_speed**2 * self.radius * unit_vec_from_center
 
         return reference_point, reference_velocity, reference_acceleration
+    
+    def calculate_path_errors(self, x_log: np.ndarray):
+
+        x_log = np.asarray(x_log, dtype=float)
+        
+        if x_log.ndim != 2 or x_log.shape[1] != 2:
+            raise ValueError("x_log must have shape (N, 2).")
+        if x_log.shape[0] == 0:
+            raise ValueError("x_log must contain at least one position.")
+
+        errors = (
+                np.linalg.norm(x_log - self.center, axis=1) - self.radius
+            )
+        
+        return errors

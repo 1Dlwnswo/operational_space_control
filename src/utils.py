@@ -1,5 +1,6 @@
 import csv
 import json
+import ast
 from dataclasses import asdict
 import numpy as np
 from datetime import datetime
@@ -50,29 +51,47 @@ def read_log(log_path: Path) -> List[Dict[str, Optional[float]]]:
 
 
 def save_metrics(metrics_path: Path, simulation_metrics: list, sim_params: SimulationParameters) -> Path:
-    metric = simulation_metrics
     write_header = not metrics_path.exists() or metrics_path.stat().st_size == 0
-    rows = [
-        [
-            step * sim_params.dt,
-            error,
-            metric.distance_errors[step],
-            metric.manipulability[step],
-        ]
-        for step, error in enumerate(metric.errors)
+    attributes = vars(simulation_metrics)
+    excluded_fields = {
+        "simulation_logs",
+        "path_obj",
+        "experiment_dir",
+        "sim_params",
+        "robot_params",
+        "control_params",
+    }
+    scalar_items = [
+        (name, value)
+        for name, value in attributes.items()
+        if name not in excluded_fields
+        if not isinstance(value, np.ndarray)
     ]
+    array_items = [
+        (name, value)
+        for name, value in attributes.items()
+        if name not in excluded_fields
+        if isinstance(value, np.ndarray)
+    ]
+    column_count = 1 + len(array_items)
 
     with metrics_path.open("a", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
         if not write_header:
             writer.writerow([])
-        writer.writerow(["rmse", metric.rmse, 0, 0])
-        writer.writerow(["convergence_time", metric.convergence_time, 0, 0])
-        writer.writerow([
-            "saturation_torque_ratio", metric.saturation_torque_ratio, 0, 0
-        ])
-        writer.writerow(["time", "errors", "distance_errors", "manipulability"])
-        writer.writerows(rows)
+        for name, value in scalar_items:
+            writer.writerow([name, value] + [""] * max(0, column_count - 2))
+        writer.writerow(["time"] + [name for name, _ in array_items])
+
+        max_length = max((len(value) for _, value in array_items), default=0)
+        for index in range(max_length):
+            writer.writerow([
+                index * sim_params.dt,
+                *[
+                    value[index] if index < len(value) else ""
+                    for _, value in array_items
+                ],
+            ])
 
     return metrics_path
 
@@ -88,36 +107,31 @@ def read_metrics(metrics_path: Path) -> List[Dict[str, object]]:
             row_index += 1
             continue
 
-        metric = {"rmse": float(rows[row_index][1])}
-        row_index += 1
-        metric["convergence_time"] = float(rows[row_index][1])
-        row_index += 1
-        if (
-            row_index < len(rows)
-            and rows[row_index]
-            and rows[row_index][0] == "saturation_torque_ratio"
-        ):
-            metric["saturation_torque_ratio"] = float(rows[row_index][1])
+        metric = {}
+        while row_index < len(rows) and rows[row_index] and rows[row_index][0] != "time":
+            name = rows[row_index][0]
+            value = rows[row_index][1] if len(rows[row_index]) > 1 else ""
+            try:
+                metric[name] = ast.literal_eval(value)
+            except (ValueError, SyntaxError):
+                metric[name] = value
             row_index += 1
-        row_index += 1  # Skip the time-series column header.
 
-        times = []
-        errors = []
-        distance_errors = []
-        manipulability = []
+        array_names = rows[row_index]
+        row_index += 1
+        time_values = []
+        arrays = {name: [] for name in array_names[1:]}
         while row_index < len(rows) and rows[row_index]:
-            times.append(float(rows[row_index][0]))
-            errors.append(float(rows[row_index][1]))
-            distance_errors.append(float(rows[row_index][2]))
-            manipulability.append(float(rows[row_index][3]))
+            time_values.append(float(rows[row_index][0]))
+            for name, value in zip(array_names[1:], rows[row_index][1:]):
+                if value:
+                    arrays[name].append(float(value))
+                else:
+                    arrays[name].append(None)
             row_index += 1
 
-        metric.update({
-            "time": times,
-            "errors": errors,
-            "distance_errors": distance_errors,
-            "manipulability": manipulability,
-        })
+        metric["time"] = time_values
+        metric.update(arrays)
         simulations.append(metric)
 
     return simulations

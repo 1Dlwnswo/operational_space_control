@@ -4,7 +4,6 @@ import numpy as np
 
 from src.parameters import RobotParameters, SimulationParameters
 from src.robot.arm_2dof.kinematics import get_end_effector_position
-from src.utils import create_experiment_dir
 
 # ============================================
 # Process simulation logs to extract relevant data for plotting
