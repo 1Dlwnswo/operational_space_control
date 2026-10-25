@@ -18,9 +18,7 @@ from src.utils import save_config
 def test_convergence_time_is_after_last_sample_outside_threshold():
     positions = np.array([[0.0, 0.0], [0.5, 0.0], [0.95, 0.0], [1.02, 0.0], [1.0, 0.0]])
 
-    convergence_time = get_ee_convergence_time(
-        positions, target_x=np.array([1.0, 0.0]), dt=0.01, error_threshold=0.1
-    )
+    convergence_time = get_ee_convergence_time(positions, target_x=np.array([1.0, 0.0]), dt=0.01, error_threshold=0.1)
 
     assert convergence_time == pytest.approx(0.02)
 

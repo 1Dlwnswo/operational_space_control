@@ -1,10 +1,10 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
+from src.metrics.metrics import SimulationMetrics
 from src.parameters import RobotParameters, SimulationParameters
 from src.path.PolygonPath import PolygonPath
 from src.robot.arm_2dof.kinematics import get_end_effector_position
-from src.metrics.metrics import SimulationMetrics
 
 
 def process_simulation_log(simulation_log: list, simulation_metrics):
@@ -32,13 +32,28 @@ def process_simulation_log(simulation_log: list, simulation_metrics):
     )
 
 
-def plot_combined_results(simulation_log: list, simulation_metrics: SimulationMetrics, q_init: np.ndarray, polygon_path_obj: PolygonPath, 
-                          sim_params: SimulationParameters, robot_params: RobotParameters, 
-                          experiment_dir=None, save_individual_figures: bool = False):
-    q_log, torque_log, a_cmd_log, \
-        x_log, xdot_log, xddot_log, \
-            error_log, rmse, \
-                saturation_torque_ratio, manipulability_log = process_simulation_log(simulation_log, simulation_metrics)
+def plot_combined_results(
+    simulation_log: list,
+    simulation_metrics: SimulationMetrics,
+    q_init: np.ndarray,
+    polygon_path_obj: PolygonPath,
+    sim_params: SimulationParameters,
+    robot_params: RobotParameters,
+    experiment_dir=None,
+    save_individual_figures: bool = False,
+):
+    (
+        q_log,
+        torque_log,
+        a_cmd_log,
+        x_log,
+        xdot_log,
+        xddot_log,
+        error_log,
+        rmse,
+        saturation_torque_ratio,
+        manipulability_log,
+    ) = process_simulation_log(simulation_log, simulation_metrics)
 
     log_length = len(simulation_log)
     time_log = np.arange(log_length) * sim_params.dt
@@ -92,11 +107,19 @@ def plot_combined_results(simulation_log: list, simulation_metrics: SimulationMe
     ax_trajectory.plot(desired_path[:, 0], desired_path[:, 1], "r--", label="Desired polygon")
     ax_trajectory.add_patch(
         plt.Circle(
-            (0.0, 0.0), robot_params.L1 + robot_params.L2,
-            facecolor="gray", alpha=0.1, edgecolor="black", linestyle="--",
+            (0.0, 0.0),
+            robot_params.L1 + robot_params.L2,
+            facecolor="gray",
+            alpha=0.1,
+            edgecolor="black",
+            linestyle="--",
         )
     )
-    ax_trajectory.set(title="End-effector Trajectory", xlabel="X Position [m]", ylabel="Z Position [m]")
+    ax_trajectory.set(
+        title="End-effector Trajectory",
+        xlabel="X Position [m]",
+        ylabel="Z Position [m]",
+    )
     ax_trajectory.set_aspect("equal", adjustable="box")
     ax_trajectory.grid(True)
     ax_trajectory.legend()
@@ -105,7 +128,12 @@ def plot_combined_results(simulation_log: list, simulation_metrics: SimulationMe
     ax_velocity.plot(time_log[sample], xdot_log[sample, 0], label="X Velocity")
     ax_velocity.plot(time_log[sample], xdot_log[sample, 1], label="Z Velocity")
     ax_velocity.plot(time_log[sample], speed[sample], "--", label="Speed")
-    ax_velocity.axhline(polygon_path_obj.desired_speed, color="orange", linestyle=":", label="Desired speed")
+    ax_velocity.axhline(
+        polygon_path_obj.desired_speed,
+        color="orange",
+        linestyle=":",
+        label="Desired speed",
+    )
     ax_velocity.set(title="End-effector Velocity", xlabel="Time [s]", ylabel="Velocity [m/s]")
     ax_velocity.grid(True)
     ax_velocity.legend(fontsize="small")
@@ -126,27 +154,35 @@ def plot_combined_results(simulation_log: list, simulation_metrics: SimulationMe
 
     ee_acceleration_magnitude = np.linalg.norm(xddot_log.reshape(log_length, -1), axis=1)
     ax_acceleration.plot(time_log[sample], ee_acceleration_magnitude[sample])
-    ax_acceleration.set(title="EE Acceleration Magnitude", xlabel="Time [s]", ylabel="Acceleration [m/s²]")
+    ax_acceleration.set(
+        title="EE Acceleration Magnitude",
+        xlabel="Time [s]",
+        ylabel="Acceleration [m/s²]",
+    )
     ax_acceleration.grid(True)
 
-    initial_ee_position = get_end_effector_position(
-        q_init[0], q_init[1], robot_params.L1, robot_params.L2
-    )
+    initial_ee_position = get_end_effector_position(q_init[0], q_init[1], robot_params.L1, robot_params.L2)
     ax_summary.axis("off")
     ax_summary.set_title("Metric Summary")
     ax_summary.text(
-        0.03, 0.95,
+        0.03,
+        0.95,
         f"Path tracking RMSE: {rmse:.4f} m\n"
         f"Initial EE position: ({initial_ee_position[0]:.3f}, {initial_ee_position[1]:.3f}) m\n"
         f"Torque saturation: {saturation_torque_ratio:.1%}",
-        va="top", transform=ax_summary.transAxes,
+        va="top",
+        transform=ax_summary.transAxes,
     )
     ax_empty_1.axis("off")
     ax_empty_2.axis("off")
     fig.tight_layout(rect=(0, 0, 1, 0.97))
 
     if experiment_dir is None:
-        fig.savefig("experiment/results/polygonal_path_simulation_results.png", dpi=300, bbox_inches="tight")
+        fig.savefig(
+            "experiment/results/polygonal_path_simulation_results.png",
+            dpi=300,
+            bbox_inches="tight",
+        )
     else:
         figures_dir = experiment_dir / "figures"
         figures_dir.mkdir(parents=True, exist_ok=True)

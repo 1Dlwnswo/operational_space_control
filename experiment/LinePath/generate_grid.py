@@ -1,5 +1,6 @@
 import numpy as np
 
+
 def uniform_grid(workspace_radius, step_size):
     x_indices = np.arange(
         np.ceil(-workspace_radius / step_size),
@@ -22,6 +23,7 @@ def uniform_grid(workspace_radius, step_size):
 
     return target_positions
 
+
 def linear_grid(initial_ee_pos, final_ee_pos, n):
     target_positions = []
     for i in range(n):
@@ -31,20 +33,30 @@ def linear_grid(initial_ee_pos, final_ee_pos, n):
         target_positions.append((x, z))
     return target_positions
 
+
 def main():
     grid = uniform_grid(2.0, 0.8)
-    
+
     import matplotlib.pyplot as plt
-    
-    circle = plt.Circle((0, 0), 2.0, facecolor='gray', alpha=0.1, fill=True, linestyle='--', edgecolor='black')
+
+    circle = plt.Circle(
+        (0, 0),
+        2.0,
+        facecolor="gray",
+        alpha=0.1,
+        fill=True,
+        linestyle="--",
+        edgecolor="black",
+    )
     plt.gca().add_patch(circle)
-    
+
     plt.scatter(*zip(*grid))
-    plt.xlabel('X-axis')
-    plt.ylabel('Z-axis')
-    plt.title('Uniform Grid Points')
-    plt.axis('equal')
+    plt.xlabel("X-axis")
+    plt.ylabel("Z-axis")
+    plt.title("Uniform Grid Points")
+    plt.axis("equal")
     plt.show()
-        
+
+
 if __name__ == "__main__":
     main()

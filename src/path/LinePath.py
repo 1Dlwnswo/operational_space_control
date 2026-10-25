@@ -1,34 +1,42 @@
 # @title
-import numpy as np
 from dataclasses import dataclass, field
+
+import numpy as np
+
 
 @dataclass
 class LinePath:
-    start_point: np.ndarray    # [x, z] numpy array
-    end_point: np.ndarray      # [x, z] numpy array
+    start_point: np.ndarray  # [x, z] numpy array
+    end_point: np.ndarray  # [x, z] numpy array
     cruise_speed: float = 1.0  # Constant desired speed along the path
-    stop_at_end: bool = True   # New parameter to control deceleration
+    stop_at_end: bool = True  # New parameter to control deceleration
     endpoint_threshold: dict = field(default_factory=lambda: {"position": 1e-2, "velocity": 1e-2})  # Thresholds for considering the endpoint reached
     at_endpoint: bool = False
-    
+
     state: int = field(init=False)
     direction: np.ndarray = field(init=False)
     length: float = field(init=False)
     unit_direction: np.ndarray = field(init=False)
-    
+
     def __post_init__(self):
         self.state = 0
-        
+
         direction = self.end_point - self.start_point
-        
+
         self.length = np.linalg.norm(direction)
-        
+
         if self.length > 0:
             self.unit_direction = direction / self.length
         else:
             self.unit_direction = np.array([0.0, 0.0])
 
-    def compute_reference(self, current_position: np.ndarray, current_velocity: np.ndarray, max_acceleration, step_index: int = 0):
+    def compute_reference(
+        self,
+        current_position: np.ndarray,
+        current_velocity: np.ndarray,
+        max_acceleration,
+        step_index: int = 0,
+    ):
 
         vec_to_point = current_position - self.start_point
 
@@ -41,13 +49,13 @@ class LinePath:
         projected_point = self.start_point + projection_length_clamped * self.unit_direction
 
         dist = self.length - projection_length_clamped
-        brake_distance = np.linalg.norm(current_velocity)**2/ (2*max_acceleration)
-        
+        brake_distance = np.linalg.norm(current_velocity) ** 2 / (2 * max_acceleration)
+
         speed_along_path = np.dot(current_velocity, self.unit_direction)
-        
+
         self.at_endpoint = dist <= self.endpoint_threshold["position"]
         stopped = abs(speed_along_path) <= self.endpoint_threshold["velocity"]
-        
+
         if self.stop_at_end and self.at_endpoint and stopped:
             candidate_state = 3
         elif self.stop_at_end and dist < brake_distance:
@@ -58,28 +66,26 @@ class LinePath:
             else:
                 candidate_state = 1
         self.state = max(self.state, candidate_state)
-        
+
         reference_point = projected_point
         reference_velocity = self.cruise_speed * self.unit_direction
         reference_acceleration = np.zeros(2)
-        
+
         if self.state == 2:
             reference_point = self.end_point
             reference_velocity = np.zeros(2)
-            reference_acceleration = - max_acceleration * self.unit_direction
+            reference_acceleration = -max_acceleration * self.unit_direction
         elif self.state == 3:
             reference_point = self.end_point
             reference_velocity = np.zeros(2)
             reference_acceleration = np.zeros(2)
-            
 
-            
         return reference_point, reference_velocity, reference_acceleration
-    
+
     def calculate_path_errors(self, x_log: np.ndarray):
 
         x_log = np.asarray(x_log, dtype=float)
-        
+
         if x_log.ndim != 2 or x_log.shape[1] != 2:
             raise ValueError("x_log must have shape (N, 2).")
         if x_log.shape[0] == 0:
@@ -94,5 +100,5 @@ class LinePath:
             closest_points = self.start_point + projections[:, None] * self.unit_direction
 
         errors = np.linalg.norm(x_log - closest_points, axis=1)
-        
+
         return errors

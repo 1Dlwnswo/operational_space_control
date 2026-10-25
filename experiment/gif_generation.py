@@ -1,11 +1,24 @@
-import numpy as np
-import imageio
-import matplotlib.pyplot as plt
 import os
-from src.robot.arm_2dof.kinematics import get_end_effector_position
 import tempfile
 
-def plot_robot_arm(ax, q1, q2, L1, L2, current_ee_x_history, current_ee_z_history, desired_full_path_x=None, desired_full_path_z=None):
+import imageio
+import matplotlib.pyplot as plt
+import numpy as np
+
+from src.robot.arm_2dof.kinematics import get_end_effector_position
+
+
+def plot_robot_arm(
+    ax,
+    q1,
+    q2,
+    L1,
+    L2,
+    current_ee_x_history,
+    current_ee_z_history,
+    desired_full_path_x=None,
+    desired_full_path_z=None,
+):
     # Joint 1 position (base)
     x0, z0 = 0.0, 0.0
 
@@ -18,35 +31,64 @@ def plot_robot_arm(ax, q1, q2, L1, L2, current_ee_x_history, current_ee_z_histor
     z_ee = -L1 * np.cos(q1) - L2 * np.cos(q1 + q2)
 
     # Draw robot arm
-    ax.plot([x0, x1], [z0, z1], 'o-', lw=4, color='blue', label='Link 1')
-    ax.plot([x1, x_ee], [z1, z_ee], 'o-', lw=4, color='green', label='Link 2')
+    ax.plot([x0, x1], [z0, z1], "o-", lw=4, color="blue", label="Link 1")
+    ax.plot([x1, x_ee], [z1, z_ee], "o-", lw=4, color="green", label="Link 2")
 
     # Draw the current end-effector position
-    ax.plot(x_ee, z_ee, 'ro', markersize=8, label='Current EE')
+    ax.plot(x_ee, z_ee, "ro", markersize=8, label="Current EE")
 
     # Draw the actual end-effector trajectory (history up to current frame) as a dashed line
-    if current_ee_x_history and current_ee_z_history: # Check if history is not empty
-        ax.plot(current_ee_x_history, current_ee_z_history, 'b:', alpha=0.7, label='Actual EE Trajectory')
+    if current_ee_x_history and current_ee_z_history:  # Check if history is not empty
+        ax.plot(
+            current_ee_x_history,
+            current_ee_z_history,
+            "b:",
+            alpha=0.7,
+            label="Actual EE Trajectory",
+        )
 
     # Draw the desired full path as a dashed line (e.g., the full circle)
     if desired_full_path_x is not None and desired_full_path_z is not None:
-        ax.plot(desired_full_path_x, desired_full_path_z, 'r--', alpha=0.8, label='Desired Path')
+        ax.plot(
+            desired_full_path_x,
+            desired_full_path_z,
+            "r--",
+            alpha=0.8,
+            label="Desired Path",
+        )
 
     # Draw workspace circle
     workspace_radius = L1 + L2
-    circle_patch = plt.Circle((0, 0), workspace_radius, color='gray', alpha=0.1, fill=True, linestyle='--', edgecolor='black')
+    circle_patch = plt.Circle(
+        (0, 0),
+        workspace_radius,
+        color="gray",
+        alpha=0.1,
+        fill=True,
+        linestyle="--",
+        edgecolor="black",
+    )
     ax.add_patch(circle_patch)
 
     ax.set_xlim(-(workspace_radius + 0.5), (workspace_radius + 0.5))
     ax.set_ylim(-(workspace_radius + 0.5), (workspace_radius + 0.5))
-    ax.set_aspect('equal', adjustable='box')
-    ax.set_xlabel('X Position [m]')
-    ax.set_ylabel('Z Position [m]')
+    ax.set_aspect("equal", adjustable="box")
+    ax.set_xlabel("X Position [m]")
+    ax.set_ylabel("Z Position [m]")
     ax.grid(True)
 
 
-def generate_robot_arm_full_trajectory_gif(concatenated_q1_log, concatenated_q2_log, sim_params, output_gif_filename='robot_arm_full_trajectory.gif', \
-    desired_total_gif_frames=200, full_desired_path_x=None, full_desired_path_z=None, target_trajectory_x=None, target_trajectory_z=None):
+def generate_robot_arm_full_trajectory_gif(
+    concatenated_q1_log,
+    concatenated_q2_log,
+    sim_params,
+    output_gif_filename="robot_arm_full_trajectory.gif",
+    desired_total_gif_frames=200,
+    full_desired_path_x=None,
+    full_desired_path_z=None,
+    target_trajectory_x=None,
+    target_trajectory_z=None,
+):
     """
     Generates a GIF visualizing the robot arm's full trajectory.
 
@@ -64,7 +106,7 @@ def generate_robot_arm_full_trajectory_gif(concatenated_q1_log, concatenated_q2_
     """
     total_sim_steps_for_gif = len(concatenated_q1_log)
     print(f"Total simulation steps for GIF: {total_sim_steps_for_gif}")
-    
+
     frame_filenames = []
     frame_dir = tempfile.TemporaryDirectory()
     fig, ax = plt.subplots(figsize=(8, 8))
@@ -73,11 +115,11 @@ def generate_robot_arm_full_trajectory_gif(concatenated_q1_log, concatenated_q2_
 
     simulation_real_duration = total_sim_steps_for_gif * sim_params.dt
     actual_num_gif_frames = len(concatenated_q1_log[::frame_interval])
-    
+
     if simulation_real_duration > 0 and actual_num_gif_frames > 0:
         fps = actual_num_gif_frames / simulation_real_duration
     else:
-        fps = 60 # Default FPS if calculation is not possible
+        fps = 60  # Default FPS if calculation is not possible
 
     print(f"Generating GIF frames... Total {actual_num_gif_frames} frames with {fps:.2f} FPS for real-time playback.")
 
@@ -88,7 +130,7 @@ def generate_robot_arm_full_trajectory_gif(concatenated_q1_log, concatenated_q2_
     for i in range(0, total_sim_steps_for_gif, frame_interval):
         q1 = concatenated_q1_log[i]
         q2 = concatenated_q2_log[i]
-        
+
         L1 = 1.0
         L2 = 1.0
 
@@ -98,28 +140,43 @@ def generate_robot_arm_full_trajectory_gif(concatenated_q1_log, concatenated_q2_
         ee_z_history.append(z_ee_current)
 
         ax.clear()
-        plot_robot_arm(ax, q1, q2, L1, L2,
-                       ee_x_history, ee_z_history, # Pass the history of actual EE positions
-                       full_desired_path_x, full_desired_path_z) # Pass the full desired path
+        plot_robot_arm(
+            ax,
+            q1,
+            q2,
+            L1,
+            L2,
+            ee_x_history,
+            ee_z_history,  # Pass the history of actual EE positions
+            full_desired_path_x,
+            full_desired_path_z,
+        )  # Pass the full desired path
 
         # Plot current target point if provided (e.g., for point-to-point targets)
         if target_trajectory_x is not None and target_trajectory_z is not None:
-            ax.plot(target_trajectory_x[i], target_trajectory_z[i], 'rx', markersize=10, mew=2, label='Current Target')
+            ax.plot(
+                target_trajectory_x[i],
+                target_trajectory_z[i],
+                "rx",
+                markersize=10,
+                mew=2,
+                label="Current Target",
+            )
             ax.legend()
 
         # Set title dynamically
-        if full_desired_path_x is not None: # For circular or continuous path
-            ax.set_title(f'Robot Arm Trajectory Tracking (Time: {i * sim_params.dt:.2f}s)')
-        elif target_trajectory_x is not None: # For point-to-point targets
-            ax.set_title(f'Robot Arm Point-to-Point (Target: ({target_trajectory_x[i]:.2f}, {target_trajectory_z[i]:.2f}))')
+        if full_desired_path_x is not None:  # For circular or continuous path
+            ax.set_title(f"Robot Arm Trajectory Tracking (Time: {i * sim_params.dt:.2f}s)")
+        elif target_trajectory_x is not None:  # For point-to-point targets
+            ax.set_title(f"Robot Arm Point-to-Point (Target: ({target_trajectory_x[i]:.2f}, {target_trajectory_z[i]:.2f}))")
         else:
-            ax.set_title(f'Robot Arm Simulation (Time: {i * sim_params.dt:.2f}s)')
-        
-        frame_filename = os.path.join(frame_dir.name, f'frame_{i:04d}.png')
+            ax.set_title(f"Robot Arm Simulation (Time: {i * sim_params.dt:.2f}s)")
+
+        frame_filename = os.path.join(frame_dir.name, f"frame_{i:04d}.png")
         plt.savefig(frame_filename)
         frame_filenames.append(frame_filename)
 
-    with imageio.get_writer(output_gif_filename, mode='I', duration = 1000 / fps) as writer:
+    with imageio.get_writer(output_gif_filename, mode="I", duration=1000 / fps) as writer:
         for filename in frame_filenames:
             image = imageio.imread(filename)
             writer.append_data(image)

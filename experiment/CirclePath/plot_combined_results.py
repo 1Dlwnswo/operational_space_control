@@ -3,10 +3,10 @@ import numpy as np
 from scipy.fft import fft, fftfreq
 from scipy.optimize import curve_fit
 
+from src.metrics.metrics import SimulationMetrics
 from src.parameters import RobotParameters, SimulationParameters
 from src.path.CirclePath import CirclePath
 from src.robot.arm_2dof.kinematics import get_end_effector_position
-from src.metrics.metrics import SimulationMetrics
 
 
 def process_simulation_log(simulation_log: list, simulation_metrics: SimulationMetrics):
@@ -34,17 +34,32 @@ def process_simulation_log(simulation_log: list, simulation_metrics: SimulationM
     )
 
 
-def plot_combined_results(simulation_log: list, simulation_metrics: SimulationMetrics, q_init: np.ndarray, circular_path_obj: CirclePath, 
-                          sim_params: SimulationParameters, robot_params: RobotParameters,
-                          experiment_dir=None, save_individual_figures: bool = False,):
-    q_log, torque_log, a_cmd_log, \
-        x_log, xdot_log, xddot_log, \
-            error_log, rmse, \
-                saturation_torque_ratio, manipulability_log = process_simulation_log(simulation_log, simulation_metrics)
+def plot_combined_results(
+    simulation_log: list,
+    simulation_metrics: SimulationMetrics,
+    q_init: np.ndarray,
+    circular_path_obj: CirclePath,
+    sim_params: SimulationParameters,
+    robot_params: RobotParameters,
+    experiment_dir=None,
+    save_individual_figures: bool = False,
+):
+    (
+        q_log,
+        torque_log,
+        a_cmd_log,
+        x_log,
+        xdot_log,
+        xddot_log,
+        error_log,
+        rmse,
+        saturation_torque_ratio,
+        manipulability_log,
+    ) = process_simulation_log(simulation_log, simulation_metrics)
 
     log_length = len(simulation_log)
     time_log = np.arange(log_length) * sim_params.dt
-    
+
     if not all(
         len(values) == log_length
         for values in (
@@ -102,12 +117,18 @@ def plot_combined_results(simulation_log: list, simulation_metrics: SimulationMe
         label="Desired circle",
     )
     workspace = plt.Circle(
-        (0.0, 0.0), robot_params.L1 + robot_params.L2,
-        facecolor="gray", alpha=0.1, edgecolor="black", linestyle="--",
+        (0.0, 0.0),
+        robot_params.L1 + robot_params.L2,
+        facecolor="gray",
+        alpha=0.1,
+        edgecolor="black",
+        linestyle="--",
     )
     ax_trajectory.add_patch(workspace)
     ax_trajectory.set(
-        title="End-effector Trajectory", xlabel="X Position [m]", ylabel="Z Position [m]"
+        title="End-effector Trajectory",
+        xlabel="X Position [m]",
+        ylabel="Z Position [m]",
     )
     ax_trajectory.set_aspect("equal", adjustable="box")
     ax_trajectory.grid(True)
@@ -123,10 +144,19 @@ def plot_combined_results(simulation_log: list, simulation_metrics: SimulationMe
     ):
         axis.plot(time_log[::10], x_log[::10, coordinate], label=f"Measured {label}")
         if log_length >= 4:
-            guess = [radius, circular_path_obj.cruise_angular_speed, phase, center[coordinate]]
+            guess = [
+                radius,
+                circular_path_obj.cruise_angular_speed,
+                phase,
+                center[coordinate],
+            ]
             try:
                 parameters, _ = curve_fit(
-                    sine_function, time_log[::10], x_log[::10, coordinate], p0=guess, maxfev=10000
+                    sine_function,
+                    time_log[::10],
+                    x_log[::10, coordinate],
+                    p0=guess,
+                    maxfev=10000,
                 )
                 axis.plot(
                     time_log[::10],
@@ -137,9 +167,7 @@ def plot_combined_results(simulation_log: list, simulation_metrics: SimulationMe
                 axis.text(
                     0.98,
                     0.98,
-                    f"{label}(t) = {parameters[0]:.3f} sin("
-                    f"{parameters[1]:.3f}t + {parameters[2]:.3f}) "
-                    f"+ {parameters[3]:.3f}",
+                    f"{label}(t) = {parameters[0]:.3f} sin({parameters[1]:.3f}t + {parameters[2]:.3f}) + {parameters[3]:.3f}",
                     transform=axis.transAxes,
                     ha="right",
                     va="top",
@@ -153,10 +181,9 @@ def plot_combined_results(simulation_log: list, simulation_metrics: SimulationMe
             ylabel=f"{label} Position [m]",
         )
         axis.grid(True)
-        axis.legend(loc='right', fontsize='x-small')
+        axis.legend(loc="right", fontsize="x-small")
 
-
-    # --- Plot 7, 8: X, Z Frequency Spectrum ---    
+    # --- Plot 7, 8: X, Z Frequency Spectrum ---
     if log_length > 1:
         frequencies = fftfreq(log_length, sim_params.dt)[: log_length // 2]
         x_spectrum = 2.0 / log_length * np.abs(fft(x_log[:, 0])[: log_length // 2])
@@ -168,16 +195,10 @@ def plot_combined_results(simulation_log: list, simulation_metrics: SimulationMe
             axis.plot(frequencies, spectrum)
             upper_frequency = frequencies[-1]
             threshold = 0.005
-            peak_candidates = np.flatnonzero(
-                (frequencies > 0.0) & (spectrum >= threshold)
-            )
+            peak_candidates = np.flatnonzero((frequencies > 0.0) & (spectrum >= threshold))
             if peak_candidates.size:
-                peak_index = peak_candidates[
-                    np.argmax(spectrum[peak_candidates])
-                ]
-                above_after_peak = np.flatnonzero(
-                    spectrum[peak_index:] > threshold
-                )
+                peak_index = peak_candidates[np.argmax(spectrum[peak_candidates])]
+                above_after_peak = np.flatnonzero(spectrum[peak_index:] > threshold)
                 if above_after_peak.size:
                     last_above_index = peak_index + above_after_peak[-1]
                     cutoff_index = min(last_above_index + 1, len(frequencies) - 1)
@@ -226,15 +247,11 @@ def plot_combined_results(simulation_log: list, simulation_metrics: SimulationMe
 
     # --- Plot 11: Manipulability det(JJᵀ) ---
     ax_manipulability.plot(time_log[::10], manipulability_log[::10])
-    ax_manipulability.set(
-        title="Manipulability det(JJᵀ)", xlabel="Time [s]", ylabel="Manipulability"
-    )
+    ax_manipulability.set(title="Manipulability det(JJᵀ)", xlabel="Time [s]", ylabel="Manipulability")
     ax_manipulability.grid(True)
 
     # --- Plot 12: Acceleration Command ---
-    a_cmd_magnitude = np.linalg.norm(
-        a_cmd_log.reshape(log_length, -1), axis=1
-    )
+    a_cmd_magnitude = np.linalg.norm(a_cmd_log.reshape(log_length, -1), axis=1)
     ax_a_cmd.plot(time_log[::10], a_cmd_magnitude[::10])
     ax_a_cmd.set(
         title="Acceleration Command",
@@ -244,9 +261,7 @@ def plot_combined_results(simulation_log: list, simulation_metrics: SimulationMe
     ax_a_cmd.grid(True)
 
     # --- Plot 13: EE Acceleration Magnitude ---
-    ee_acceleration_magnitude = np.linalg.norm(
-        xddot_log.reshape(log_length, -1), axis=1
-    )
+    ee_acceleration_magnitude = np.linalg.norm(xddot_log.reshape(log_length, -1), axis=1)
     ax_acceleration.plot(time_log[::10], ee_acceleration_magnitude[::10])
     ax_acceleration.set(
         title="EE Acceleration Magnitude",
@@ -256,9 +271,7 @@ def plot_combined_results(simulation_log: list, simulation_metrics: SimulationMe
     ax_acceleration.grid(True)
 
     # Placeholder for additional plots; add new plots here as needed.
-    initial_ee_position = get_end_effector_position(
-        q_init[0], q_init[1], robot_params.L1, robot_params.L2
-    )
+    initial_ee_position = get_end_effector_position(q_init[0], q_init[1], robot_params.L1, robot_params.L2)
     ax_summary.axis("off")
     ax_summary.set_title("Metric Summary")
     ax_summary.text(

@@ -47,16 +47,11 @@ def test_create_experiment_dir_creates_timestamped_directory(tmp_path, monkeypat
 
     experiment_dir = create_experiment_dir("line")
 
-    assert (
-        experiment_dir
-        == tmp_path / "experiment" / "line" / "results" / "2026-10-22_120000"
-    )
+    assert experiment_dir == tmp_path / "experiment" / "line" / "results" / "2026-10-22_120000"
     assert experiment_dir.is_dir()
 
 
-def test_create_experiment_dir_raises_if_timestamped_directory_exists(
-    tmp_path, monkeypatch
-):
+def test_create_experiment_dir_raises_if_timestamped_directory_exists(tmp_path, monkeypatch):
     class FixedDateTime:
         @staticmethod
         def now():

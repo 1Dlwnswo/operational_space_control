@@ -15,18 +15,13 @@ def test_forward_kinematics_and_jacobian_match_finite_difference():
 
     numerical_jacobian = np.column_stack(
         [
-            (
-                get_end_effector_position(*(q + np.eye(2)[i] * eps), *lengths)
-                - get_end_effector_position(*(q - np.eye(2)[i] * eps), *lengths)
-            )
+            (get_end_effector_position(*(q + np.eye(2)[i] * eps), *lengths) - get_end_effector_position(*(q - np.eye(2)[i] * eps), *lengths))
             / (2 * eps)
             for i in range(2)
         ]
     )
 
-    np.testing.assert_allclose(
-        get_jacobian(*q, *lengths), numerical_jacobian, atol=1e-8
-    )
+    np.testing.assert_allclose(get_jacobian(*q, *lengths), numerical_jacobian, atol=1e-8)
 
 
 def test_jacobian_derivative_matches_finite_difference():
@@ -35,14 +30,9 @@ def test_jacobian_derivative_matches_finite_difference():
     lengths = (1.2, 0.8)
     eps = 1e-6
 
-    numerical_derivative = (
-        get_jacobian(*(q + qdot * eps), *lengths)
-        - get_jacobian(*(q - qdot * eps), *lengths)
-    ) / (2 * eps)
+    numerical_derivative = (get_jacobian(*(q + qdot * eps), *lengths) - get_jacobian(*(q - qdot * eps), *lengths)) / (2 * eps)
 
-    np.testing.assert_allclose(
-        get_J_dot(*q, *qdot, *lengths), numerical_derivative, atol=1e-8
-    )
+    np.testing.assert_allclose(get_J_dot(*q, *qdot, *lengths), numerical_derivative, atol=1e-8)
 
 
 def test_inverse_kinematics_round_trip():
@@ -52,9 +42,7 @@ def test_inverse_kinematics_round_trip():
 
     actual_q = inverse_kinematics(position, *lengths, q_current=expected_q)
 
-    np.testing.assert_allclose(
-        get_end_effector_position(*actual_q, *lengths), position, atol=1e-10
-    )
+    np.testing.assert_allclose(get_end_effector_position(*actual_q, *lengths), position, atol=1e-10)
 
 
 def test_inverse_kinematics_clips_unreachable_target_to_maximum_reach():

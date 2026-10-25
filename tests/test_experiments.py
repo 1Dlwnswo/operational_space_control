@@ -21,9 +21,7 @@ def _shorten_simulation(monkeypatch, experiment_module):
 
     def run_short(model, data, q_init, control_type, sim_params, path_obj, **kwargs):
         sim_params.num_steps = SHORT_RUN_STEPS
-        return run_mujoco_simulation(
-            model, data, q_init, control_type, sim_params, path_obj, **kwargs
-        )
+        return run_mujoco_simulation(model, data, q_init, control_type, sim_params, path_obj, **kwargs)
 
     monkeypatch.setattr(experiment_module, "run_simulation", run_short)
 
@@ -83,9 +81,7 @@ def test_polygon_path_experiment_runs(monkeypatch):
     q_init = inverse_kinematics(vertices[0], 1.0, 1.0, vertices[0])
     path = PolygonPath(vertices, desired_speed=0.5, stop_at_end=False)
 
-    log, simulation_metrics, sim_params = polygon_experiment.run_experiment(
-        q_init, path, max_acceleration=5.0, use_viewer=False
-    )
+    log, simulation_metrics, sim_params = polygon_experiment.run_experiment(q_init, path, max_acceleration=5.0, use_viewer=False)
 
     _assert_operational_space_log(log, SHORT_RUN_STEPS)
     assert sim_params.dt > 0
