@@ -22,9 +22,12 @@ package = false
 
 [tool.ruff]
 line-length = 150
+cache-dir = ".cache/ruff"
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
+cache_dir = ".cache/pytest"
+
 
 [build-system]
 requires = ["uv_build>=0.13.1,<0.14.0"]

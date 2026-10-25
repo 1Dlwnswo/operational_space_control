@@ -37,6 +37,9 @@ class SimulationMetrics:
     rms_torque: float = field(init=False)
     rms_torque_rate: float = field(init=False)
     saturation_torque_ratio: float = field(init=False)
+    
+    threshold_violation_ratio: float = field(init=False)
+    success: bool = False
 
     def __post_init__(self):
         if not self.simulation_logs:
@@ -59,7 +62,7 @@ class SimulationMetrics:
 
         self.errors = self.path_obj.calculate_path_errors(x_log)
 
-        # Calaulate distance_errors, convergence_time if Linepath
+        # Calaulate distance_errors, convergence_time for Linepath
         if isinstance(self.path_obj, LinePath):
             self.distance_errors = np.linalg.norm(x_log - self.path_obj.end_point, axis=1)
             self.convergence_time = get_ee_convergence_time(x_log, self.path_obj.end_point, self.sim_params.dt)
@@ -84,7 +87,12 @@ class SimulationMetrics:
             jacobian = get_jacobian(q[0], q[1], self.robot_params.L1, self.robot_params.L2)
             manipulability.append(np.sqrt(max(0.0, np.linalg.det(jacobian @ jacobian.T))))
         self.manipulability = np.asarray(manipulability)
-
+        
+        # Calcuate threshold violation ratio
+        self.threshold_violation_ratio = get_threshold_violation_ratio(self.errors)
+        
+        self.success = self.threshold_violation_ratio < 0.01
+        
 
 # Define convergence time function for end-effector position
 def get_ee_convergence_time(ee_x_log: np.ndarray, target_x: np.ndarray, dt: float, error_threshold=0.01):
@@ -102,3 +110,16 @@ def get_convergence_time_from_errors(errors: np.ndarray, dt: float, error_thresh
             break
 
     return (last_exceeding_idx + 1) * dt
+
+def get_threshold_violation_ratio(
+    errors: np.ndarray,
+    error_threshold: float = 0.05,
+) -> float:
+    errors = np.asarray(errors, dtype=float)
+
+    if errors.size == 0:
+        raise ValueError("errors must contain at least one value.")
+    if error_threshold < 0:
+        raise ValueError("error_threshold must be non-negative.")
+
+    return float(np.mean(errors > error_threshold))
