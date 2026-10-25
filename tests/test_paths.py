@@ -7,9 +7,7 @@ from src.path.PolygonPath import PolygonPath
 
 
 def test_circle_path_reference_has_expected_position_velocity_and_acceleration():
-    path = CirclePath(
-        center=np.array([1.0, 2.0]), radius=2.0, cruise_angular_speed=0.5
-    )
+    path = CirclePath(center=np.array([1.0, 2.0]), radius=2.0, cruise_angular_speed=0.5)
 
     position, velocity, acceleration = path.compute_reference(
         np.array([3.0, 2.0]), np.zeros(2), max_aceleration=5.0
@@ -21,9 +19,7 @@ def test_circle_path_reference_has_expected_position_velocity_and_acceleration()
 
 
 def test_circle_path_at_center_uses_start_angle_without_nan():
-    path = CirclePath(
-        center=np.zeros(2), radius=1.5, start_angle=np.pi / 2
-    )
+    path = CirclePath(center=np.zeros(2), radius=1.5, start_angle=np.pi / 2)
 
     reference = path.compute_reference(np.zeros(2), np.zeros(2), 5.0)
 

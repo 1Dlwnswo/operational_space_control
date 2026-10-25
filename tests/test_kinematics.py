@@ -1,8 +1,8 @@
 import numpy as np
 
 from src.robot.arm_2dof.kinematics import (
-    get_J_dot,
     get_end_effector_position,
+    get_J_dot,
     get_jacobian,
     inverse_kinematics,
 )

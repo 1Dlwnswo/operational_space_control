@@ -13,7 +13,6 @@ from src.robot.arm_2dof.kinematics import (
     inverse_kinematics,
 )
 
-
 SHORT_RUN_STEPS = 12
 
 
@@ -45,7 +44,10 @@ def test_circle_path_experiment_runs(monkeypatch, tmp_path):
     path = CirclePath(center=np.array([0.3, 0.0]), radius=0.7)
 
     log, simulation_metrics, sim_params = circle_experiment.run_experiment(
-        q_init, path, max_acceleration=15.0, use_viewer=False,
+        q_init,
+        path,
+        max_acceleration=15.0,
+        use_viewer=False,
         experiment_dir=tmp_path,
     )
 
