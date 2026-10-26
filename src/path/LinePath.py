@@ -21,12 +21,12 @@ class LinePath:
     def __post_init__(self):
         self.state = 0
 
-        direction = self.end_point - self.start_point
+        self.direction = self.end_point - self.start_point
 
-        self.length = np.linalg.norm(direction)
+        self.length = np.linalg.norm(self.direction)
 
         if self.length > 0:
-            self.unit_direction = direction / self.length
+            self.unit_direction = self.direction / self.length
         else:
             self.unit_direction = np.array([0.0, 0.0])
 

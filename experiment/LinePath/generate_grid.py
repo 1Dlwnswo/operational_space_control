@@ -19,7 +19,7 @@ def uniform_grid(workspace_radius, step_size):
             if np.hypot(x, z) < workspace_radius:
                 target_positions.append((x, z))
 
-    target_positions.sort(key=lambda p: (p[0] + p[1], p[0]))
+    target_positions.sort(key=lambda p: (p[1], p[0]))
 
     return target_positions
 

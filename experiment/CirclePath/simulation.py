@@ -12,7 +12,7 @@ from src.mujoco_setup import (
     get_simulation_parameters,
     load_model_and_data,
 )
-from src.parameters import RobotParameters, SimulationParameters
+from src.parameters import SimulationParameters
 from src.path.CirclePath import CirclePath
 from src.utils import create_experiment_dir, save_log, save_metrics
 
@@ -74,7 +74,7 @@ def generate_GIF(
     simulation_log: list,
     sim_params: SimulationParameters,
     circular_path_obj: CirclePath,
-    robot_params: RobotParameters,
+    experiment_dir = None
 ):
     # Extract logs for joint angles
     q_log = np.array([sim_result.q for sim_result in simulation_log])
@@ -87,16 +87,21 @@ def generate_GIF(
     theta = np.linspace(0, 2 * np.pi, 500)  # More points for a smooth circle
     full_circular_path_x = circular_path_obj.center[0] + circular_path_obj.radius * np.cos(theta)
     full_circular_path_z = circular_path_obj.center[1] + circular_path_obj.radius * np.sin(theta)
-
-    generate_robot_arm_full_trajectory_gif(
-        q1_log_circular,
-        q2_log_circular,
-        sim_params,
-        output_gif_filename="experiment/results/robot_arm_circular_path.gif",
-        desired_total_gif_frames=200,
-        full_desired_path_x=full_circular_path_x,
-        full_desired_path_z=full_circular_path_z,
-    )
+    
+    if experiment_dir == None: 
+        raise(f"experiment_dir: {experiment_dir} doesn't exists")
+    else:
+        gif_dir = experiment_dir / "gif"
+        gif_dir.mkdir(parents=True, exist_ok=True)
+        generate_robot_arm_full_trajectory_gif(
+            q1_log_circular,
+            q2_log_circular,
+            sim_params,
+            output_gif_filename=gif_dir / "circle_path.gif",
+            desired_total_gif_frames=200,
+            full_desired_path_x=full_circular_path_x,
+            full_desired_path_z=full_circular_path_z,
+        )
 
 
 def main(use_viewer=True, generate_plot=True, generate_gif=True):
@@ -145,7 +150,7 @@ def main(use_viewer=True, generate_plot=True, generate_gif=True):
     # Generate GIF for circular path tracking
     if generate_gif:
         print("Generating GIF...")
-        generate_GIF(simulation_log, sim_params, circular_path_obj, RobotParameters_obj)
+        generate_GIF(simulation_log, sim_params, circular_path_obj, experiment_dir=experiment_dir)
 
 
 if __name__ == "__main__":

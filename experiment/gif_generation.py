@@ -62,7 +62,7 @@ def plot_robot_arm(
     circle_patch = plt.Circle(
         (0, 0),
         workspace_radius,
-        color="gray",
+        facecolor="gray",
         alpha=0.1,
         fill=True,
         linestyle="--",
@@ -77,7 +77,7 @@ def plot_robot_arm(
     ax.set_ylabel("Z Position [m]")
     ax.grid(True)
 
-
+# Generates a GIF visualizing the robot arm's full trajectory.
 def generate_robot_arm_full_trajectory_gif(
     concatenated_q1_log,
     concatenated_q2_log,
@@ -89,21 +89,6 @@ def generate_robot_arm_full_trajectory_gif(
     target_trajectory_x=None,
     target_trajectory_z=None,
 ):
-    """
-    Generates a GIF visualizing the robot arm's full trajectory.
-
-    Args:
-        concatenated_q1_log (list): List of all q1 joint angles concatenated.
-        concatenated_q2_log (list): List of all q2 joint angles concatenated.
-        sim_params (SimulationParameters): Simulation parameters object.
-        robot_params (RobotParameters): Robot parameters object.
-        output_gif_filename (str): Name of the output GIF file.
-        desired_total_gif_frames (int): Desired total number of frames for the GIF.
-        full_desired_path_x (list, optional): List of x-coordinates for the *entire* desired reference path (e.g., a full circle or a line).
-        full_desired_path_z (list, optional): List of z-coordinates for the *entire* desired reference path.
-        target_trajectory_x (list, optional): List of x-coordinates for the *current target sequence* (e.g., for point-to-point, the target for each segment).
-        target_trajectory_z (list, optional): List of z-coordinates for the *current target sequence*.
-    """
     total_sim_steps_for_gif = len(concatenated_q1_log)
     print(f"Total simulation steps for GIF: {total_sim_steps_for_gif}")
 

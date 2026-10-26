@@ -114,6 +114,7 @@ def generate_GIF(
     simulation_logs: list,
     sim_params: SimulationParameters,
     target_positions: np.ndarray,
+    experiment_dir = None,
 ):
 
     concatenated_q1_log = []
@@ -132,16 +133,20 @@ def generate_GIF(
         concatenated_target_x_log.extend([target_x] * len(q_log))
         concatenated_target_z_log.extend([target_z] * len(q_log))
 
-    # Call the new function to generate the GIF
-    generate_robot_arm_full_trajectory_gif(
-        concatenated_q1_log,
-        concatenated_q2_log,
-        sim_params,
-        output_gif_filename="experiment/results/robot_arm_full_trajectory.gif",
-        desired_total_gif_frames=200,
-        target_trajectory_x=concatenated_target_x_log,
-        target_trajectory_z=concatenated_target_z_log,
-    )
+    if experiment_dir == None: 
+        raise(f"experiment_dir: {experiment_dir} doesn't exists")
+    else:
+        gif_dir = experiment_dir / "gif"
+        gif_dir.mkdir(parents=True, exist_ok=True)
+        generate_robot_arm_full_trajectory_gif(
+            concatenated_q1_log,
+            concatenated_q2_log,
+            sim_params,
+            output_gif_filename=gif_dir / "line_path.gif",
+            desired_total_gif_frames=200,
+            target_trajectory_x=concatenated_target_x_log,
+            target_trajectory_z=concatenated_target_z_log,
+        )
 
 
 def main(use_viewer=True, generate_plot=True, generate_gif=True):
@@ -185,7 +190,7 @@ def main(use_viewer=True, generate_plot=True, generate_gif=True):
     # Generate GIF for the full trajectory across all target positions
     if generate_gif:
         print("Generating GIF...")
-        generate_GIF(simulation_logs, sim_params, target_positions)
+        generate_GIF(simulation_logs, sim_params, target_positions, experiment_dir=experiment_dir)
 
 
 if __name__ == "__main__":

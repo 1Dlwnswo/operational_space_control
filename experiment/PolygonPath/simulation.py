@@ -108,7 +108,7 @@ def generate_GIF(
     simulation_log: list,
     sim_params: SimulationParameters,
     polygon_path_obj: PolygonPath,
-    robot_params: RobotParameters,
+    experiment_dir = None,
 ):
     # Extract logs for joint angles
     q_log = np.array([sim_result.q for sim_result in simulation_log])
@@ -136,15 +136,20 @@ def generate_GIF(
             desired_polygon_path_z_gif.append(segment.start_point[1])
 
     # Call the GIF generation function for the polygonal path
-    generate_robot_arm_full_trajectory_gif(
-        q1_log_polygon,
-        q2_log_polygon,
-        sim_params,
-        output_gif_filename="experiment/results/robot_arm_polygonal_path.gif",
-        desired_total_gif_frames=200,
-        full_desired_path_x=desired_polygon_path_x_gif,
-        full_desired_path_z=desired_polygon_path_z_gif,
-    )
+    if experiment_dir == None: 
+        raise(f"experiment_dir: {experiment_dir} doesn't exists")
+    else:
+        gif_dir = experiment_dir / "gif"
+        gif_dir.mkdir(parents=True, exist_ok=True)
+        generate_robot_arm_full_trajectory_gif(
+            q1_log_polygon,
+            q2_log_polygon,
+            sim_params,
+            output_gif_filename=gif_dir / "polygon_path.gif",
+            desired_total_gif_frames=200,
+            full_desired_path_x=desired_polygon_path_x_gif,
+            full_desired_path_z=desired_polygon_path_z_gif,
+        )
 
 
 # ============================================
@@ -207,7 +212,7 @@ def main(use_viewer=True, generate_plot=True, generate_gif=True):
     # Generate GIF for polygonal path following
     if generate_gif:
         print("Generating GIF...")
-        generate_GIF(simulation_log, sim_params, polygon_path_obj, RobotParameters_obj)
+        generate_GIF(simulation_log, sim_params, polygon_path_obj, experiment_dir=experiment_dir)
 
 
 if __name__ == "__main__":
