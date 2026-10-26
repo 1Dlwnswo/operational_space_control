@@ -143,7 +143,6 @@ def generate_GIF(
             concatenated_q2_log,
             sim_params,
             output_gif_filename=gif_dir / "line_path.gif",
-            desired_total_gif_frames=200,
             target_trajectory_x=concatenated_target_x_log,
             target_trajectory_z=concatenated_target_z_log,
         )

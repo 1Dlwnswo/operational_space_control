@@ -7,6 +7,8 @@ import numpy as np
 
 from src.robot.arm_2dof.kinematics import get_end_effector_position
 
+GIF_FPS = 30
+
 
 def plot_robot_arm(
     ax,
@@ -83,7 +85,6 @@ def generate_robot_arm_full_trajectory_gif(
     concatenated_q2_log,
     sim_params,
     output_gif_filename="robot_arm_full_trajectory.gif",
-    desired_total_gif_frames=200,
     full_desired_path_x=None,
     full_desired_path_z=None,
     target_trajectory_x=None,
@@ -96,23 +97,20 @@ def generate_robot_arm_full_trajectory_gif(
     frame_dir = tempfile.TemporaryDirectory()
     fig, ax = plt.subplots(figsize=(8, 8))
 
-    frame_interval = max(1, total_sim_steps_for_gif // desired_total_gif_frames)
-
     simulation_real_duration = total_sim_steps_for_gif * sim_params.dt
-    actual_num_gif_frames = len(concatenated_q1_log[::frame_interval])
+    frame_count = int(np.ceil(simulation_real_duration * GIF_FPS))
+    frame_indices = np.minimum(
+        np.rint(np.arange(frame_count) / GIF_FPS / sim_params.dt).astype(int),
+        total_sim_steps_for_gif - 1,
+    )
 
-    if simulation_real_duration > 0 and actual_num_gif_frames > 0:
-        fps = actual_num_gif_frames / simulation_real_duration
-    else:
-        fps = 60  # Default FPS if calculation is not possible
-
-    print(f"Generating GIF frames... Total {actual_num_gif_frames} frames with {fps:.2f} FPS for real-time playback.")
+    print(f"Generating GIF frames... Total {len(frame_indices)} frames with {GIF_FPS} FPS for real-time playback.")
 
     # Initialize lists to store the end-effector trajectory history
     ee_x_history = []
     ee_z_history = []
 
-    for i in range(0, total_sim_steps_for_gif, frame_interval):
+    for frame_number, i in enumerate(frame_indices):
         q1 = concatenated_q1_log[i]
         q2 = concatenated_q2_log[i]
 
@@ -157,11 +155,11 @@ def generate_robot_arm_full_trajectory_gif(
         else:
             ax.set_title(f"Robot Arm Simulation (Time: {i * sim_params.dt:.2f}s)")
 
-        frame_filename = os.path.join(frame_dir.name, f"frame_{i:04d}.png")
+        frame_filename = os.path.join(frame_dir.name, f"frame_{frame_number:04d}.png")
         plt.savefig(frame_filename)
         frame_filenames.append(frame_filename)
 
-    with imageio.get_writer(output_gif_filename, mode="I", duration=1000 / fps) as writer:
+    with imageio.get_writer(output_gif_filename, mode="I", duration=1000 / GIF_FPS) as writer:
         for filename in frame_filenames:
             image = imageio.imread(filename)
             writer.append_data(image)

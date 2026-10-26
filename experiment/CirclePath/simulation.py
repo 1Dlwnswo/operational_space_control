@@ -98,7 +98,6 @@ def generate_GIF(
             q2_log_circular,
             sim_params,
             output_gif_filename=gif_dir / "circle_path.gif",
-            desired_total_gif_frames=200,
             full_desired_path_x=full_circular_path_x,
             full_desired_path_z=full_circular_path_z,
         )

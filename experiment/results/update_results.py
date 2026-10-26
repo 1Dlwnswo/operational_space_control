@@ -6,9 +6,9 @@ EXPERIMENT_ROOT = PROJECT_ROOT / "experiment"
 RESULTS_ROOT = EXPERIMENT_ROOT / "results"
 
 PATH_GIFS = {
-    "LinePath": "robot_arm_full_trajectory.gif",
-    "CirclePath": "robot_arm_circular_path.gif",
-    "PolygonPath": "robot_arm_polygonal_path.gif",
+    "LinePath": "line_path.gif",
+    "CirclePath": "circle_path.gif",
+    "PolygonPath": "polygon_path.gif",
 }
 
 
@@ -31,7 +31,7 @@ def update_results() -> None:
         destination.mkdir(parents=True, exist_ok=True)
 
         plot = latest / "figures" / "combined_figures.png"
-        gif = RESULTS_ROOT / gif_name
+        gif = latest / "gif" / gif_name
 
         for source, output_name in (
             (plot, "combined_figures.png"),

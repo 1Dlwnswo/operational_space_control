@@ -146,7 +146,6 @@ def generate_GIF(
             q2_log_polygon,
             sim_params,
             output_gif_filename=gif_dir / "polygon_path.gif",
-            desired_total_gif_frames=200,
             full_desired_path_x=desired_polygon_path_x_gif,
             full_desired_path_z=desired_polygon_path_z_gif,
         )
