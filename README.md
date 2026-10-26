@@ -51,12 +51,12 @@ $$
 
 where:
 
-- \(M\) is the joint-space inertia matrix.
-- \(J\) is the end-effector Jacobian.
-- \(\Lambda\) is the operational-space inertia matrix.
-- \(a_{\mathrm{cmd}}\) is the commanded Cartesian acceleration.
-- \(\mu\) and \(p\) denote the implemented velocity-dependent and gravity-compensation terms.
-- \(\tau\) is the resulting joint torque.
+- $M$ is the joint-space inertia matrix.
+- $J$ is the end-effector Jacobian.
+- $\Lambda$ is the operational-space inertia matrix.
+- $a_{\mathrm{cmd}}$ is the commanded Cartesian acceleration.
+- $\mu$ and $p$ denote the implemented velocity-dependent and gravity-compensation terms.
+- $\tau$ is the resulting joint torque.
 
 The implementation regularizes the operational-space inertia calculation numerically. This regularization is not, by itself, a complete singularity-handling strategy. Behavior near low-manipulability configurations remains an important evaluation target.
 
@@ -70,11 +70,15 @@ The line-path experiment evaluates Cartesian tracking along a straight reference
 
 **Simulation results**
 
-![Line Path Results](experiment/results/LinePath/combined_figures.png)
+<p align="center">
+  <img src="experiment/results/LinePath/combined_figures.png" alt="Line Path Results" width="900">
+</p>
 
 **Simulation animation**
 
-![Line Path Animation](experiment/results/LinePath/animation.gif)
+<p align="center">
+  <img src="experiment/results/LinePath/simulation.gif" alt="Line Path Animation" width="400">
+</p>
 
 ### 2. Circular Path
 
@@ -82,11 +86,15 @@ The circular-path experiment evaluates tracking along a curved Cartesian referen
 
 **Simulation results**
 
-![Circular Path Results](experiment/results/CirclePath/combined_figures.png)
+<p align="center">
+  <img src="experiment/results/CirclePath/combined_figures.png" alt="Circular Path Results" width="900">
+</p>
 
 **Simulation animation**
 
-![Circular Path Animation](experiment/results/CirclePath/animation.gif)
+<p align="center">
+  <img src="experiment/results/CirclePath/simulation.gif" alt="Circular Path Animation" width="400">
+</p>
 
 ### 3. Polygonal Path
 
@@ -94,11 +102,15 @@ The polygonal-path experiment evaluates tracking along a piecewise-linear refere
 
 **Simulation results**
 
-![Polygonal Path Results](experiment/results/PolygonPath/combined_figures.png)
+<p align="center">
+  <img src="experiment/results/PolygonPath/combined_figures.png" alt="Polygonal Path Results" width="900">
+</p>
 
 **Simulation animation**
 
-![Polygonal Path Animation](experiment/results/PolygonPath/animation.gif)
+<p align="center">
+  <img src="experiment/results/PolygonPath/simulation.gif" alt="Polygonal Path Animation" width="400">
+</p>
 
 > These figures and animations illustrate selected simulation runs. They do not, on their own, establish robustness to model uncertainty, disturbances, or sensor noise. Such claims require systematic experiments under documented conditions.
 
