@@ -47,7 +47,7 @@ def main():
                 "--plot" if GENERATE_PLOT else "--no-plot",
                 "--gif" if GENERATE_GIF else "--no-gif",
             ],
-            cwd=PROJECT_ROOT,
+            check=False, cwd=PROJECT_ROOT,
         )
 
         if result.returncode == 0:

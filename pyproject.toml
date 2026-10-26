@@ -24,6 +24,9 @@ package = false
 line-length = 150
 cache-dir = ".cache/ruff"
 
+[tool.ruff.lint]
+ignore = ["FA100"]
+
 [tool.pytest.ini_options]
 pythonpath = ["."]
 cache_dir = ".cache/pytest"

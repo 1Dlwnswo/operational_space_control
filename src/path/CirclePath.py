@@ -28,7 +28,6 @@ class CirclePath:
         if current_radius < 1e-6:  # Avoid division by zero
             reference_point = self.center + self.radius * np.array([np.cos(self.start_angle), np.sin(self.start_angle)])
 
-            distance = self.radius
             tangent_vector = np.array([-np.sin(self.start_angle), np.cos(self.start_angle)]) * self.direction
 
             reference_velocity = np.array([0.0, 0.0])
@@ -36,7 +35,6 @@ class CirclePath:
             unit_vec_from_center = vec_from_center / current_radius
             reference_point = self.center + self.radius * unit_vec_from_center
 
-            distance = np.abs(current_radius - self.radius)
             tangent_vector = np.array([-unit_vec_from_center[1], unit_vec_from_center[0]]) * self.direction
             reference_velocity = tangent_vector * self.radius * self.cruise_angular_speed
 

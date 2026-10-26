@@ -41,7 +41,7 @@ def test_circle_path_experiment_runs(monkeypatch, tmp_path):
     q_init = np.array([np.pi * 5 / 12, np.pi * (1 - 10 / 12)])
     path = CirclePath(center=np.array([0.3, 0.0]), radius=0.7)
 
-    log, simulation_metrics, sim_params = circle_experiment.run_experiment(
+    log, _, sim_params = circle_experiment.run_experiment(
         q_init,
         path,
         max_acceleration=15.0,
@@ -81,7 +81,7 @@ def test_polygon_path_experiment_runs(monkeypatch):
     q_init = inverse_kinematics(vertices[0], 1.0, 1.0, vertices[0])
     path = PolygonPath(vertices, desired_speed=0.5, stop_at_end=False)
 
-    log, simulation_metrics, sim_params = polygon_experiment.run_experiment(q_init, path, max_acceleration=5.0, use_viewer=False)
+    log, _, sim_params = polygon_experiment.run_experiment(q_init, path, max_acceleration=5.0, use_viewer=False)
 
     _assert_operational_space_log(log, SHORT_RUN_STEPS)
     assert sim_params.dt > 0
