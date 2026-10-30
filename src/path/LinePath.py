@@ -35,7 +35,6 @@ class LinePath:
         current_position: np.ndarray,
         current_velocity: np.ndarray,
         max_acceleration,
-        step_index: int = 0,
     ):
 
         vec_to_point = current_position - self.start_point

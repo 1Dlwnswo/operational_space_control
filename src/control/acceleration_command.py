@@ -9,9 +9,8 @@ def path_following(
     path_obj,
     impedance_control_params: ImpedanceControlParameters,
     max_acceleration,
-    step_index: int = 0,
 ):
-    x_des, x_des_dot, x_des_ddot = path_obj.compute_reference(x, xdot, max_acceleration, step_index)
+    x_des, x_des_dot, x_des_ddot = path_obj.compute_reference(x, xdot, max_acceleration)
 
     e = (x_des - x).reshape(-1, 1)  # (2,1)
     edot = (x_des_dot - xdot).reshape(-1, 1)  # (2,1)

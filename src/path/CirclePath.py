@@ -17,7 +17,6 @@ class CirclePath:
         current_position: np.ndarray,
         current_velocity,
         max_aceleration,
-        step_index: int = 0,
     ):
         # Vector from center to current_position
         vec_from_center = current_position - self.center
@@ -38,7 +37,7 @@ class CirclePath:
             tangent_vector = np.array([-unit_vec_from_center[1], unit_vec_from_center[0]]) * self.direction
             reference_velocity = tangent_vector * self.radius * self.cruise_angular_speed
 
-        reference_acceleration = -(self.cruise_angular_speed**2) * self.radius * unit_vec_from_center
+        reference_acceleration = - (np.linalg.norm(current_velocity) ** 2) / self.radius * unit_vec_from_center
 
         return reference_point, reference_velocity, reference_acceleration
 

@@ -60,7 +60,6 @@ class PolygonPath:
         current_position: np.ndarray,
         current_velocity: np.ndarray,
         max_acceleration,
-        step_index: int = 0,
     ):
 
         if self.current_segment_idx >= len(self._segments):
@@ -74,7 +73,7 @@ class PolygonPath:
         current_segment_path = self._segments[self.current_segment_idx]
 
         # Get reference from the current LinePath segment
-        x_des, x_des_dot, x_des_ddot = current_segment_path.compute_reference(current_position, current_velocity, max_acceleration, step_index)
+        x_des, x_des_dot, x_des_ddot = current_segment_path.compute_reference(current_position, current_velocity, max_acceleration)
 
         if current_segment_path.stop_at_end:
             if current_segment_path.state == 3:

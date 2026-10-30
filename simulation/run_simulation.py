@@ -62,7 +62,6 @@ def run_simulation(
                 control_type,
                 path_obj,
                 max_acceleration,
-                step_index=i,
                 save_operational_space=save_operational_space,
                 viewer=viewer,
             )

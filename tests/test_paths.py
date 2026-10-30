@@ -9,7 +9,7 @@ from src.path.PolygonPath import PolygonPath
 def test_circle_path_reference_has_expected_position_velocity_and_acceleration():
     path = CirclePath(center=np.array([1.0, 2.0]), radius=2.0, cruise_angular_speed=0.5)
 
-    position, velocity, acceleration = path.compute_reference(np.array([3.0, 2.0]), np.zeros(2), max_aceleration=5.0)
+    position, velocity, acceleration = path.compute_reference(np.array([3.0, 2.0]), np.array([0.0, 1.0]), max_aceleration=5.0)
 
     np.testing.assert_allclose(position, [3.0, 2.0])
     np.testing.assert_allclose(velocity, [0.0, 1.0])

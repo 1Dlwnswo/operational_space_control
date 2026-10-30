@@ -21,7 +21,6 @@ def perform_simulation_step(
     control_type: str,
     path_obj,
     max_acceleration,
-    step_index: int = 0,
     save_operational_space=False,
     viewer=None,
 ):
@@ -48,7 +47,6 @@ def perform_simulation_step(
             path_obj,
             impedance_control_params,
             max_acceleration,
-            step_index=step_index,
         )
     else:
         raise ValueError(f"Unknown control_type: {control_type}")
