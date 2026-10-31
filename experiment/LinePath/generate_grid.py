@@ -3,12 +3,12 @@ import numpy as np
 
 def uniform_grid(workspace_radius, step_size):
     x_indices = np.arange(
-        np.ceil(-workspace_radius / step_size),
-        np.floor(workspace_radius / step_size) + 1,
+        np.floor(-workspace_radius / step_size),
+        np.ceil(workspace_radius / step_size),
     )
     z_indices = np.arange(
-        np.ceil(-workspace_radius / step_size - 0.5),
-        np.floor(workspace_radius / step_size - 0.5) + 1,
+        np.floor(-workspace_radius / step_size - 0.5),
+        np.ceil(workspace_radius / step_size + 0.5),
     )
     x_range = z_indices * step_size
     z_range = (x_indices + 0.5) * step_size
@@ -35,7 +35,7 @@ def linear_grid(initial_ee_pos, final_ee_pos, n):
 
 
 def main():
-    grid = uniform_grid(2.0, 0.8)
+    grid = uniform_grid(2.0, 0.2)
 
     import matplotlib.pyplot as plt
 
