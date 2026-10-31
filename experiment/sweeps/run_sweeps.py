@@ -8,6 +8,7 @@ from experiment.LinePath.simulation import run_experiment as run_linepath_sim
 from src.mujoco_setup import MODEL_PATH, get_robot_parameters, load_model_and_data
 from src.utils import create_experiment_dir
 
+
 def linepath_cruise_speed_sweep(
     q_init: np.ndarray,
     target_positions: np.ndarray,
@@ -74,7 +75,9 @@ def main():
     
     cruise_speeds = np.linspace(0.8, 4.0, 5)
     max_accelerations = np.array([10.0])
+    generate_plot=np.zeros((len(cruise_speeds), len(max_accelerations)))
     
+    print("target positions:", target_positions)
     print("cruise_speeds:", cruise_speeds)
     print("max_accelerations:", max_accelerations)
     
@@ -83,7 +86,7 @@ def main():
         target_positions=target_positions,
         cruise_speeds=cruise_speeds,
         max_accelerations=max_accelerations,
-        generate_plot=np.zeros((len(cruise_speeds), len(max_accelerations)))
+        generate_plot=generate_plot,
     )
 
 
