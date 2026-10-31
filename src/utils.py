@@ -144,6 +144,8 @@ def save_config(
                 separators=(", ", ": "),
                 ensure_ascii=False,
             )
+        if isinstance(value, np.generic):
+            value = value.item()
         return json.dumps(value, ensure_ascii=False)
 
     config_path = experiment_dir / "config.json"

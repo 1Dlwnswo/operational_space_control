@@ -6,4 +6,5 @@ uv.txt
 experiment/LinePath/results/
 experiment/CirclePath/results/
 experiment/PolygonPath/results/
+experiment/sweeps/results/
 Makefile
