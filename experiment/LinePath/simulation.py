@@ -99,7 +99,8 @@ def run_experiment(
         simulation_logs.append(sim_log)
         simulation_metrics.append(simulation_metric)
 
-        print(f"Simulation {idx + 1}/{len(target_positions)}: RMSE = {simulation_metric.rmse:.6f}")
+        if verbose:
+            print(f"Simulation {idx + 1}/{len(target_positions)}: RMSE = {simulation_metric.rmse:.6f}")
 
     if verbose:
         print("Simulation completed for all target positions.")
